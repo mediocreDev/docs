@@ -34,7 +34,7 @@
               },
               {
                 "group": "Application",
-                "icon": "app-window",
+                "icon": "app-store",
                 "pages": [
                   "linux/awesome-tools/applications/vim"
                 ]
@@ -44,44 +44,20 @@
         ]
       },
       {
-        "tab": "Captialist Slavery (WIP)",
+        "tab": "Captialist Slavery",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Ây Ai(zaaa...)",
+            "icon": "rocketchat",
             "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "captialists-slavery/prompting-framework"
             ]
           }
         ]
       },
       {
         "tab": "Trading Dojo (WIP)",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
+        "groups": []
       },
       {
         "tab": "Guides",

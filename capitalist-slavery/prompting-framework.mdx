@@ -1,0 +1,236 @@
+---
+title: 'Prompting Framework'
+description: 'Popular prompting frameworks for various usecases.'
+---
+
+### 1. **RTF — Role | Task | Format**
+
+**Purpose**: Direct and structured prompts that clearly define who ChatGPT is, what it must do, and how the output should be structured.
+
+- **Role**: Defines who/what ChatGPT acts as  
+    _Example_: “Act as a TED Talk speaker”
+    
+- **Task**: What you want ChatGPT to do  
+    _Example_: “Explain quantum computing to teenagers”
+    
+- **Format**: How you want the output delivered  
+    _Example_: “In 5 bullet points with analogies”
+    
+✅ **Full Prompt Example**:
+
+> Act as a TED Talk speaker. Explain quantum computing to teenagers in 5 bullet points using fun analogies.
+> 
+### 2. **RISE — Role | Input | Steps | Expectation**
+
+**Purpose**: Excellent for **step-by-step processes** and guided workflows.
+
+- **Role**: Assign a specific expert identity  
+    _Example_: “You are a senior UX researcher.”
+    
+- **Input**: Provide data or context  
+    _Example_: “Here’s a user feedback file…”
+    
+- **Steps**: Ask for a clear breakdown of the process  
+    _Example_: “Follow a 4-step process to analyze.”
+    
+- **Expectation**: Define what success looks like  
+    _Example_: “Summarize key insights and suggest UX improvements.”
+    
+✅ **Full Prompt Example**:
+
+> You are a senior UX researcher. Given the user feedback below, follow a 4-step process to analyze user sentiment and suggest two UX improvements.
+
+### 3. **APE — Action | Purpose | Expectation**
+
+**Purpose**: Action-focused prompts with clarity on intention and desired outcome.
+
+- **Action**: What you want ChatGPT to do  
+    _Example_: “Create a content calendar.”
+    
+- **Purpose**: Why you want this done  
+    _Example_: “To increase engagement for a fitness brand.”
+    
+- **Expectation**: Final format or goal  
+    _Example_: “Include daily post ideas with themes and hashtags.”
+    
+✅ **Full Prompt Example**:
+
+> Create a content calendar to increase engagement for a fitness brand. Include daily post ideas with themes and relevant hashtags.
+
+### 4. **TAG — Task | Action | Goal**
+
+**Purpose**: Useful for productivity and instructional requests.
+
+- **Task**: The overall job  
+    _Example_: “Write a product description.”
+    
+- **Action**: Specifics of how to do it  
+    _Example_: “Use persuasive tone and highlight 3 key benefits.”
+    
+- **Goal**: What outcome you're aiming for  
+    _Example_: “To boost conversions on the product page.”
+    
+✅ **Full Prompt Example**:
+
+> Write a product description using a persuasive tone and highlight 3 key benefits. The goal is to boost conversions on the product page.
+
+### 5. **BAB — Before | After | Bridge**
+
+**Purpose**: Great for **storytelling**, transformation marketing, and content hooks.
+
+- **Before**: Describe the problem or old situation  
+    _Example_: “Marketers wasted hours creating reports.”
+    
+- **After**: Describe the solution or new situation  
+    _Example_: “Now it takes 5 minutes with automation.”
+    
+- **Bridge**: Ask for how we get there  
+    _Example_: “Write a landing page explaining this transformation.”
+    
+✅ **Full Prompt Example**:
+
+> Before: Marketers wasted hours creating reports. After: Now it takes 5 minutes with automation. Write a landing page explaining this transformation.
+
+### 6. **TRACE — Task | Request | Action | Context | Example**
+
+**Purpose**: Highly descriptive prompts for nuanced outputs.
+
+- **Task**: What needs to be done  
+    _Example_: “Create a marketing email.”
+    
+- **Request**: Special request or format  
+    _Example_: “Use a catchy subject line and one CTA.”
+    
+- **Action**: What action GPT should take  
+    _Example_: “Write in a friendly tone.”
+    
+- **Context**: Explain the setting  
+    _Example_: “This is for a new pet grooming app.”
+    
+- **Example**: Give a sample if needed  
+    _Example_: “Similar to this: ‘Tame the Tangles!’”
+    
+✅ **Full Prompt Example**:
+
+> Create a marketing email. Use a catchy subject line and one CTA. Write in a friendly tone. This is for a new pet grooming app. Example: ‘Tame the Tangles!’
+
+### 7. **RACE — Role | Action | Context | Expectation**
+
+**Purpose**: Instructional format great for decision-making or creative problem-solving.
+
+- **Role**: Define GPT’s persona  
+    _Example_: “You are a financial analyst.”
+    
+- **Action**: The core action  
+    _Example_: “Review this investment plan.”
+    
+- **Context**: What’s the situation?  
+    _Example_: “Startup looking for angel funding.”
+    
+- **Expectation**: What should be delivered?  
+    _Example_: “Identify red flags and summarize viability.”
+    
+✅ **Full Prompt Example**:
+
+> You are a financial analyst. Review this investment plan. The startup is seeking angel funding. Identify red flags and summarize its viability.
+
+### 8. **COAST — Context | Objective | Actions | Scenario | Task**
+
+**Purpose**: Best used for simulations, training, or complex guidance.
+
+- **Context**: Background  
+    _Example_: “A software company launching new AI tool.”
+    
+- **Objective**: The goal  
+    _Example_: “Generate interest through email outreach.”
+    
+- **Actions**: Required activities  
+    _Example_: “Write 3 cold email variations.”
+    
+- **Scenario**: Situation to consider  
+    _Example_: “Recipients are CTOs unfamiliar with AI.”
+    
+- **Task**: Final deliverable  
+    _Example_: “Each email must have a unique value proposition.”
+    
+✅ **Full Prompt Example**:
+
+> A software company is launching a new AI tool. The goal is to generate interest through email outreach. Write 3 cold email variations. The recipients are CTOs unfamiliar with AI. Each email must have a unique value proposition.
+
+### 9. **ERA — Expectation | Role | Action**
+
+**Purpose**: Fast and effective when you need quick clarity with minimal fluff.
+
+- **Expectation**: What’s the output  
+    _Example_: “Create a concise 3-line summary.”
+    
+- **Role**: Who GPT should act as  
+    _Example_: “As a political analyst.”
+    
+- **Action**: What’s the task  
+    _Example_: “Summarize this debate transcript.”
+    
+✅ **Full Prompt Example**:
+
+> Create a concise 3-line summary as a political analyst after reviewing this debate transcript.
+
+### 10. **ROSES — Role | Objective | Scenario | Expected Solution | Steps**
+
+**Purpose**: Perfect for complex problem solving or strategic recommendations.
+
+- **Role**: Who GPT is  
+    _Example_: “You are a DevOps consultant.”
+    
+- **Objective**: What you're trying to achieve  
+    _Example_: “Reduce server downtime by 40%.”
+    
+- **Scenario**: What's happening  
+    _Example_: “Client has legacy infrastructure.”
+    
+- **Expected Solution**: Define the outcome  
+    _Example_: “Recommend a hybrid migration approach.”
+    
+- **Steps**: Request step-by-step action  
+    _Example_: “Break down migration in 5 actionable phases.”
+    
+✅ **Full Prompt Example**:
+
+> You are a DevOps consultant. The objective is to reduce server downtime by 40%. The client has legacy infrastructure. Recommend a hybrid migration approach. Break down the migration in 5 actionable phases.
+
+### 11. **CARE — Context | Action | Result | Example**
+
+**Purpose**: Clarity and realism with built-in demonstration
+
+- **Context**: The situation  
+    _Example_: “Remote team needs better communication.”
+    
+- **Action**: What to do  
+    _Example_: “Write Slack guidelines.”
+    
+- **Result**: Desired outcome  
+    _Example_: “Ensure consistent and polite interactions.”
+    
+- **Example**: Include model response  
+    _Example_: “E.g., ‘Use threads for topic-specific replies.’”
+    
+✅ **Full Prompt Example**:
+
+> Remote team needs better communication. Write Slack guidelines to ensure consistent and polite interactions. Example: “Use threads for topic-specific replies.”
+
+---
+
+## ✅ Summary Table
+
+|Framework|Best For|
+|---|---|
+|**RTF**|Simple, instructional tasks|
+|**RISE**|Step-by-step workflows|
+|**APE**|Purpose-driven content|
+|**TAG**|Conversion-focused writing|
+|**BAB**|Storytelling & persuasion|
+|**TRACE**|Detailed creative instructions|
+|**RACE**|Professional advice/decision making|
+|**COAST**|Simulations & complex planning|
+|**ERA**|Quick summaries|
+|**ROSES**|Strategic problem-solving|
+|**CARE**|Instruction + modeled example|
