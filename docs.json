@@ -148,13 +148,13 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
+          "anchor": "Mintlify Docs",
           "href": "https://mintlify.com/docs",
           "icon": "book-open-cover"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "anchor": "InoReader",
+          "href": "https://www.inoreader.com/all_articles",
           "icon": "newspaper"
         }
       ]
