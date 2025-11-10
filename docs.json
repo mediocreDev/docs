@@ -16,8 +16,8 @@
           {
             "group": "Swiss Army knives",
             "pages": [
-              "index",
-              "quickstart",
+              "linux/file",
+              "linux/snippets",
               "development"
             ]
           },
