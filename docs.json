@@ -50,14 +50,27 @@
             "group": "Ây Ai(zaaa...)",
             "icon": "rocketchat",
             "pages": [
-              "captialists-slavery/prompting-framework"
+              "captialist-slavery/prompting-framework"
             ]
           }
         ]
       },
       {
         "tab": "Trading Dojo (WIP)",
-        "groups": []
+        "groups": [
+          {
+            "group": "Legacies",
+            "icon": "landmark-dome",
+            "pages": [
+              {
+                "group": "HELEN's",
+                "pages": [
+                  "trading-dojo/legacies/helen/bookmarks"
+                ]
+              }
+            ]
+          }
+        ]
       },
       {
         "tab": "Guides",
