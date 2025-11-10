@@ -23,13 +23,20 @@
           },
           {
             "group": "Awesome tools",
-            "icon": "drill",
             "pages": [          
               {
                 "group": "System",
                 "icon": "file-code",
                 "pages": [
+                  "linux/awesome-tools/system/ufw",
                   "linux/awesome-tools/system/zsh"
+                ]
+              },
+              {
+                "group": "Application",
+                "icon": "file-code",
+                "pages": [
+                  "linux/awesome-tools/applications/vim"
                 ]
               }
             ]
