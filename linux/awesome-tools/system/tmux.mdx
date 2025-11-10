@@ -1,0 +1,42 @@
+---
+title: "tmux"
+description: "A terminal multiplexer."
+---
+
+> 🗎 Refs: \
+> [Restore Tmux Session After Reboot](https://superuser.com/questions/440015/restore-tmux-session-after-reboot) \
+> [The Tao of Tmux](https://tao-of-tmux.readthedocs.io/en/latest/manuscript/10-scripting.html) \
+> [Tmux Cheat Sheet & Quick Reference](https://tmuxcheatsheet.com/)
+
+#### List session
+
+```shell
+tmux ls
+```
+
+#### Commands in command mode
+
+> 
+
+<Info>
+  Trigger using  `Ctrl + b` (_trigger_) then `:` to enter command mode (_cm_) or another hotkey
+</Info>
+
+#### New session
+
+```shell
+# Untitled session
+tmux
+# or
+tmux new
+# or when in command mode
+new
+
+# Named session
+tmux new -s $SESSION_NAME
+# or when in command mode
+new -s $SESSION_NAME
+
+# Start or attach to an existing session named SESSION_NAME
+tmux new -A -s $SESSION_NAME
+```
