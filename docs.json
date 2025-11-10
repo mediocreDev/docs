@@ -22,10 +22,16 @@
             ]
           },
           {
-            "dropdown": "Awesome tools",
+            "group": "Awesome tools",
             "icon": "drill",
-            "pages": [
-              "linux/awesome-tools/zsh"
+            "pages": [          
+              {
+                "group": "System",
+                "icon": "file-code",
+                "pages": [
+                  "linux/awesome-tools/zsh"
+                ]
+              }
             ]
           }
         ]
