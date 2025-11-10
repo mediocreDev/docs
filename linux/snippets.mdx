@@ -1,0 +1,28 @@
+---
+title: "Snippets"
+description: "Description of your new file."
+icon: "fa-wrench"
+---
+
+#### Trial Reset `BCompare`
+
+```shell
+# Install
+sudo dpkg -i beyondcompare-*.deb
+sudo apt-get -f install  # Fix dependencies if needed
+
+# Find location
+dpkg -L bcompare
+rpm -ql bcompare
+
+# Edit file
+sudo mv /usr/bin/bcompare /usr/bin/bcompare.real
+sudo vim /usr/bin/bcompare
+```
+
+```shell
+# Add these lines
+#!/bin/sh
+rm -rf /home/{{USER}}/.config/bcompare/registry.dat
+bcompare.real $@
+```
