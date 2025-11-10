@@ -16,33 +16,16 @@
           {
             "group": "Swiss Army knives",
             "pages": [
-              "linux/file",
-              "linux/snippets",
-              "linux/monitoring"
+              "linux/swiss-army-knives/file",
+              "linux/swiss-army-knives/snippets",
+              "linux/swiss-army-knives/monitoring"
             ]
           },
           {
-            "group": "Customization",
+            "dropdown": "Awesome tools",
+            "icon": "drill",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "linux/awesome-tools/zsh"
             ]
           }
         ]
