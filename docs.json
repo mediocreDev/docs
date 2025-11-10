@@ -26,7 +26,7 @@
             "pages": [          
               {
                 "group": "System",
-                "icon": "file-code",
+                "icon": "terminal",
                 "pages": [
                   "linux/awesome-tools/system/ufw",
                   "linux/awesome-tools/system/zsh"
@@ -34,7 +34,7 @@
               },
               {
                 "group": "Application",
-                "icon": "file-code",
+                "icon": "app-window",
                 "pages": [
                   "linux/awesome-tools/applications/vim"
                 ]
