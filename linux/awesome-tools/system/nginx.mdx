@@ -4,23 +4,26 @@ description: "Web server/Reverse proxy/Load balancer/Mail proxy/HTTP cache"
 ---
 
 > 🗎 Refs: \
-> <br/>[http://nginx.org/en/docs/beginners_guide.html#control](http://nginx.org/en/docs/beginners_guide.html#control) \
-> <br/>[https://www.digitalocean.com/community/tools/nginx](https://www.digitalocean.com/community/tools/nginx) \
-> <br/>[https://linuxconfig.org/how-to-check-nginx-status-on-ubuntu](https://linuxconfig.org/how-to-check-nginx-status-on-ubuntu)
+> \
+> http://nginx.org/en/docs/beginners_guide.html#control \
+> \
+> https://www.digitalocean.com/community/tools/nginx \
+> \
+> https://linuxconfig.org/how-to-check-nginx-status-on-ubuntu
 
-#### Check status:
+#### Check status
 
 ```bash
 systemctl status nginx
 ```
 
-#### Check configs:
+#### Check configs
 
 ```bash
  sudo nginx -t
 ```
 
-#### Remove configs:
+#### Remove configs
 
 ```bash
 sudo rm -f /etc/nginx/sites-enabled/<domain>
@@ -29,7 +32,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-#### Modified default: 
+#### Modified default
 
 ```nginx
 ##
@@ -61,10 +64,9 @@ server {
 
     return 404 "Unknown domain (HTTPS): $host\n";
 }
-
 ```
 
-#### Dummy cert/key:
+#### Dummy cert/key
 
 ```shell
 sudo mkdir -p /etc/nginx/ssl
@@ -75,7 +77,7 @@ sudo openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
   -subj "/CN=localhost"
 ```
 
-#### Replace to modified default:
+#### Replace to modified default
 
 ```shell
 sudo rm -f /etc/nginx/sites-enabled/default
@@ -90,11 +92,13 @@ sudo systemctl reload nginx
 #### Nginx & Certbot
 
 1. Prerequisites
+
 ```shell
 sudo mkdir -p /var/www/certbot/.well-known/acme-challenge
 sudo chmod -R 755 /var/www/certbot
 sudo chown -R $USER:$USER /var/www/certbot
 ```
+
 1. /var/www/certbot
 
 ```nginx
@@ -115,11 +119,10 @@ server {
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-#### Quick actions for publishing a website:
+#### Quick actions for publishing a website
 
 1. Create an Nginx config file: `/etc/nginx/sites-available/mysite.dev`.
-
-2. Initialize config:
+2. Initialize config
 
 ```nginx
 server {
@@ -157,26 +160,27 @@ server {
 }
 ```
 
-3. Enable config:
+3. Enable config
 
 ```shell
 sudo ln -s /etc/nginx/sites-available/mysite.dev /etc/nginx/sites-enabled/
 ```
 
-4. Test and reload Nginx:
+4. Test and reload Nginx
 
 ```shell
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-5. SSL Setup:
+5. SSL Setup
 
-- Install Certbot:
+- Install Certbot
+
 ```shell
 sudo apt install certbot python3-certbot-nginx
 ```
 
-- Install SSL certificate:
+- Install SSL certificate
 
 ```shell
 sudo rm -rf /etc/letsencrypt
@@ -184,21 +188,24 @@ sudo rm -rf /var/lib/letsencrypt
 sudo certbot --nginx -d mysite.dev -d www.mysite.dev
 ```
 
-6. Configure firewall:
+6. Configure firewall
 
 ```shell
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 22/tcp
 ```
-7. Post check:
+
+7. Post check
+
 - Access `https://mysite.dev`
-- Check DNS resolution:
+- Check DNS resolution
 
 ```shell
 dig mysite.dev
 ```
-8. One-click:
+
+8. One-click
 
 ```shell
 #!/bin/bash
