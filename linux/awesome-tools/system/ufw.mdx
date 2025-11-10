@@ -1,0 +1,87 @@
+---
+title: 'New file'
+description: 'Description of your new file.'
+---
+https://blog.programster.org/ufw-cheatsheet
+
+https://www.cyberciti.biz/faq/unix-linux-check-if-port-is-in-use-command/
+
+#### Installation
+
+```bash
+sudo apt update && sudo apt install ufw -y
+```
+
+#### Enable/Disable/Reload
+
+```bash
+# Enable
+sudo ufw enable
+# Disable
+sudo ufw disable
+# Reload
+sudo ufw reload
+```
+
+#### Initial setup
+
+```bash
+# default rule - allow all outgoing, deny all incoming
+sudo ufw default allow outgoing
+sudo ufw default deny incoming
+```
+
+#### Start up at boot
+
+```bash
+sudo editor /etc/ufw/ufw.conf
+# Edit: ENABLED=yes
+```
+
+#### Check status
+
+```bash
+# Simple
+sudo ufw status
+# Including ID
+sudo ufw status numbered
+```
+
+#### Add rule
+
+```shell
+# Allow port
+sudo ufw allow $PORT_NUMBER
+sudo ufw allow $PORT_NUMBER/tcp
+# note: must allow the modified port of ssh first before restarting SSH
+
+# Allow IP
+sudo ufw allow from $IP_ADDRESS
+
+# Allow IP range
+sudo ufw allow from $IP/$CIDR
+
+# Allow IP range on one port
+sudo ufw allow from $IP/$CIDR to any port $PORT_NUMBER
+
+# Block incoming requests from IP
+sudo ufw insert 1 deny from $IP_ADDRESS
+# note: insert 1 for on top of rule list, ufw follows the order of the rules
+sudo ufw deny from $IP_ADDRESS # when there is no rule
+
+# Block outgoing requests to IP
+sudo ufw deny out from any to $IP_ADDRESS
+
+# note: ssh is always an alias of 22
+sudo ufw allow ssh
+#sudo ufw allow 22
+```
+
+#### Delete rule
+
+```shell
+sudo ufw delete $RULE_NUMBER
+```
+
+> ✍🏻**Tips**: Get `RULE_NUMBER` using [Check status](#check-status)
+

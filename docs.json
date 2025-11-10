@@ -29,7 +29,7 @@
                 "group": "System",
                 "icon": "file-code",
                 "pages": [
-                  "linux/awesome-tools/zsh"
+                  "linux/awesome-tools/system/zsh"
                 ]
               }
             ]
