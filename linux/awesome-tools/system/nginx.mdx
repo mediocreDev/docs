@@ -1,0 +1,252 @@
+---
+title: "nginx"
+description: "Web server/Reverse proxy/Load balancer/Mail proxy/HTTP cache"
+---
+
+> 🗎 Refs: \
+> <br/>[http://nginx.org/en/docs/beginners_guide.html#control](http://nginx.org/en/docs/beginners_guide.html#control) \
+> <br/>[https://www.digitalocean.com/community/tools/nginx](https://www.digitalocean.com/community/tools/nginx) \
+> <br/>[https://linuxconfig.org/how-to-check-nginx-status-on-ubuntu](https://linuxconfig.org/how-to-check-nginx-status-on-ubuntu)
+
+#### Check status:
+
+```bash
+systemctl status nginx
+```
+
+#### Check configs:
+
+```bash
+ sudo nginx -t
+```
+
+#### Remove configs:
+
+```bash
+sudo rm -f /etc/nginx/sites-enabled/<domain>
+sudo rm -f /etc/nginx/sites-available/<domain>
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### Modified default: 
+
+```nginx
+##
+# Catch-all for unknown domains (HTTP + HTTPS)
+##
+
+# --- HTTP (port 80) ---
+server {
+    listen 80 default_server;
+    server_name _;
+
+    access_log /var/log/nginx/catchall_access.log;
+    error_log  /var/log/nginx/catchall_error.log warn;
+
+    return 404 "Unknown domain (HTTP): $host\n";
+}
+
+# --- HTTPS (port 443) ---
+server {
+    listen 443 ssl default_server;
+    server_name _;
+
+    # Dummy self-signed cert (or reuse forextooldev cert if you prefer)
+    ssl_certificate     /etc/nginx/ssl/dummy.crt;
+    ssl_certificate_key /etc/nginx/ssl/dummy.key;
+
+    access_log /var/log/nginx/catchall_access.log;
+    error_log  /var/log/nginx/catchall_error.log warn;
+
+    return 404 "Unknown domain (HTTPS): $host\n";
+}
+
+```
+
+#### Dummy cert/key:
+
+```shell
+sudo mkdir -p /etc/nginx/ssl
+
+sudo openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+  -keyout /etc/nginx/ssl/dummy.key \
+  -out /etc/nginx/ssl/dummy.crt \
+  -subj "/CN=localhost"
+```
+
+#### Replace to modified default:
+
+```shell
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl reload nginx
+sudo vim /etc/nginx/sites-available/000-default
+sudo ln -s /etc/nginx/sites-available/000-default /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### Nginx & Certbot
+
+1. Prerequisites
+```shell
+sudo mkdir -p /var/www/certbot/.well-known/acme-challenge
+sudo chmod -R 755 /var/www/certbot
+sudo chown -R $USER:$USER /var/www/certbot
+```
+1. /var/www/certbot
+
+```nginx
+server {
+    server_name rentalsdev.americ.io.vn www.rentalsdev.americ.io.vn;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # your existing proxy / app config here
+}
+```
+
+2. Active
+
+```shell
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+#### Quick actions for publishing a website:
+
+1. Create an Nginx config file: `/etc/nginx/sites-available/mysite.dev`.
+
+2. Initialize config:
+
+```nginx
+server {
+    listen 80;
+    server_name mysite.dev www.mysite.dev;
+    root /var/www/mysite.dev/html;
+    index index.html;
+
+	# Web page
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API requests to Express backend
+    location /api {
+        proxy_pass http://localhost:3001/api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy /health to backend
+    location = /health {
+        proxy_pass http://localhost:3001/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+3. Enable config:
+
+```shell
+sudo ln -s /etc/nginx/sites-available/mysite.dev /etc/nginx/sites-enabled/
+```
+
+4. Test and reload Nginx:
+
+```shell
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+5. SSL Setup:
+
+- Install Certbot:
+```shell
+sudo apt install certbot python3-certbot-nginx
+```
+
+- Install SSL certificate:
+
+```shell
+sudo rm -rf /etc/letsencrypt
+sudo rm -rf /var/lib/letsencrypt
+sudo certbot --nginx -d mysite.dev -d www.mysite.dev
+```
+
+6. Configure firewall:
+
+```shell
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 22/tcp
+```
+7. Post check:
+- Access `https://mysite.dev`
+- Check DNS resolution:
+
+```shell
+dig mysite.dev
+```
+8. One-click:
+
+```shell
+#!/bin/bash
+set -e
+
+DOMAIN="rentalsdev.americ.io.vn"
+PORT="1991"
+EMAIL="you@example.com"  # <-- Change this to your email
+
+echo "🛠 Updating system and installing dependencies..."
+sudo apt update
+sudo apt install -y nginx certbot python3-certbot-nginx ufw
+
+echo "🔓 Allowing NGINX Full profile in UFW..."
+sudo ufw allow 'OpenSSH'
+sudo ufw allow 'Nginx Full'
+sudo ufw --force enable
+
+echo "📄 Creating NGINX config for $DOMAIN..."
+
+NGINX_CONF="/etc/nginx/sites-available/$DOMAIN"
+sudo tee "$NGINX_CONF" > /dev/null <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN www.$DOMAIN;
+
+    location / {
+        proxy_pass http://localhost:$PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+
+echo "🔗 Enabling site and testing NGINX..."
+sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+echo "🔐 Requesting SSL certificate for $DOMAIN..."
+sudo certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive --agree-tos -m "$EMAIL"
+
+echo "♻️ Reloading NGINX with SSL configuration..."
+sudo systemctl reload nginx
+
+echo "✅ DONE: HTTPS is live for https://$DOMAIN"
+dig mysite.dev
+```

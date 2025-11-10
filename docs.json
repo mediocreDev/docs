@@ -24,12 +24,17 @@
           },
           {
             "group": "Awesome tools",
-            "pages": [          
+            "pages": [
+              "linux/awesome-tools/personal-tool-checklist",          
               {
                 "group": "System",
                 "icon": "terminal",
                 "pages": [
+                  "linux/awesome-tools/system/nginx",
+                  "linux/awesome-tools/system/systemctl",
+                  "linux/awesome-tools/system/tmux",
                   "linux/awesome-tools/system/ufw",
+                  "linux/awesome-tools/system/web-terminal",
                   "linux/awesome-tools/system/zsh"
                 ]
               },
@@ -37,7 +42,8 @@
                 "group": "Application",
                 "icon": "app-store",
                 "pages": [
-                  "linux/awesome-tools/applications/vim"
+                  "linux/awesome-tools/applications/vim",
+                  "linux/awesome-tools/applications/others"
                 ]
               }
             ]
