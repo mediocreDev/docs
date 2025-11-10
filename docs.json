@@ -7,7 +7,7 @@
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "_assets/favicon.svg",
   "navigation": {
     "tabs": [
       {
@@ -17,8 +17,9 @@
             "group": "Swiss Army knives",
             "pages": [
               "linux/swiss-army-knives/file",
-              "linux/swiss-army-knives/snippets",
-              "linux/swiss-army-knives/monitoring"
+              "linux/swiss-army-knives/user",
+              "linux/swiss-army-knives/monitoring",
+              "linux/swiss-army-knives/snippets"
             ]
           },
           {
@@ -147,8 +148,8 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "_assets/logo/light.svg",
+    "dark": "_assets/logo/dark.svg"
   },
   "navbar": {
     "links": [

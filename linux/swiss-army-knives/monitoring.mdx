@@ -29,3 +29,11 @@ sudo systemctl status $SERVICE_NAME
 # All running services:
 sudo systemctl --type=service
 ```
+
+#### Check disk usage
+
+```shell
+echo "Free disk space:" && df -h ~ | awk 'NR==2 {print $4 " available on " $6}' && echo -e "\nTop 5 largest directories in $HOME:" && du -h --max-depth=1 ~ | sort -hr | head -n 5
+```
+
+/
