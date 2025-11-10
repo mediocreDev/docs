@@ -1,0 +1,31 @@
+---
+title: "Monitoring"
+description: "Commands for monitoring system"
+icon: "binoculars"
+---
+
+#### Check if port is in use
+
+> 🗎 **Refs**: [How to check if port is in use on Linux or Unix - nixCraft](https://www.cyberciti.biz/faq/unix-linux-check-if-port-is-in-use-command/)
+
+```shell
+sudo lsof -i -P -n | grep LISTEN
+sudo lsof -i:$PORT
+sudo ss -tulpn | grep LISTEN
+sudo nmap -sTU -O $IP_ADDRESS
+```
+
+#### Check local IP
+
+```bash
+ip -4 addr show | grep inet
+```
+
+#### Check services
+
+```bash
+# Specified service
+sudo systemctl status $SERVICE_NAME
+# All running services:
+sudo systemctl --type=service
+```
