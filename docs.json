@@ -17,7 +17,8 @@
             "group": "Swiss Army knives",
             "pages": [
               "linux/file",
-              "linux/snippets"
+              "linux/snippets",
+              "linux/monitoring"
             ]
           },
           {
