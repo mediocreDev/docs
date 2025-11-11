@@ -97,13 +97,15 @@
           {
             "group": "Go",
             "icon": "golang",
-            "pages": []
+            "pages": [
+              "langs/Go/essential-go"
+            ]
           },
           {
             "group": "Python",
             "icon": "python",
             "pages": [
-              "langs/Python/python"
+              "langs/Python/essential-python"
             ]
           }
         ]
