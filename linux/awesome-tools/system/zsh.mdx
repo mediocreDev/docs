@@ -1,6 +1,6 @@
 ---
-title: 'Zsh'
-description: 'Personal Zsh configs.'
+title: "Zsh"
+description: "Personal Zsh configs."
 ---
 
 #### Commons
@@ -40,8 +40,21 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
 # Personal .zshrc (OliverKain/.zshrc)
 curl -L https://gist.github.com/OliverKain/fdd2d1c9dcfeba3f8946960a2ed5990e/raw -o ~/.zshrc && echo "✅ saved to filename"
 
-
 # Simple zsh (for web terminal)
 export LANG=en_US.UTF-8 TERM=xterm-256color; PROMPT='%n@%m:%~%# '
 ```
 
+#### Install `powerlevel10k` theme to `Oh-my-zsh`
+
+```shell
+# Download
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+
+# Set ~/.zshrc
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+# Reload
+source ~/.zshrc
+
+# Go through the wizard
+```
