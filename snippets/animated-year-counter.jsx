@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export default function YearsCounter({ startYear = 2018 }) {
+export const YearsCounter({ startYear = 2018 }) {
   const currentYear = new Date().getFullYear();
   const [count, setCount] = useState(0);
   const [pulse, setPulse] = useState(false);
