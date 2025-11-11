@@ -80,6 +80,7 @@
                 "group": "Application",
                 "icon": "app-store",
                 "pages": [
+                  "linux/awesome-tools/applications/gpg",
                   "linux/awesome-tools/applications/vim",
                   "linux/awesome-tools/applications/others"
                 ]
