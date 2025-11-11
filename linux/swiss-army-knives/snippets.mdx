@@ -4,7 +4,7 @@ description: "Some usefull snippets"
 icon: "wrench"
 ---
 
-#### Trial Reset `BCompare`
+#### Trial Reset `BCompare` in Linux
 
 ```shell
 # Install
@@ -18,9 +18,7 @@ rpm -ql bcompare
 # Edit file
 sudo mv /usr/bin/bcompare /usr/bin/bcompare.real
 sudo vim /usr/bin/bcompare
-```
 
-```shell
 # Add these lines
 #!/bin/sh
 rm -rf /home/{{USER}}/.config/bcompare/registry.dat

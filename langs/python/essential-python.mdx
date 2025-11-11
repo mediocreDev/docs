@@ -3,7 +3,7 @@ title: 'Essential Python'
 description: 'Personal Python snippets'
 ---
 
-### Manage python versions with `pyenv`
+## Manage python versions with `pyenv`
 
 ```shell
 pyenv install 3.8.10
@@ -25,8 +25,8 @@ pyenv uninstall 3.8.10
 
 
 ---
-### Python Boilerplate with `uv`
-#### 1. Initialize runnable boilerplate using `uv`
+## Python Boilerplate with `uv`
+### 1. Initialize runnable boilerplate using `uv`
 
 - Clone git initialized project from Github
 
@@ -95,7 +95,7 @@ uv pip install -e .
 uv run boilerplate # runner name
 ```
 
-#### 2. Integrate test, lint...
+### 2. Integrate test, lint...
 
 - Add dependencies:
 
@@ -126,7 +126,7 @@ uv run ruff format .
 uv run pytest
 #uv run pytest -q --disable-warnings --maxfail=1
 ```
-#### 3. Integrate pre-commit git hook
+### 3. Integrate pre-commit git hook
 
 - Add dependencies:
 
@@ -174,7 +174,7 @@ uv run pre-commit install
 uv run pre-commit run --all-files
 ```
 
-#### 4. Integrate Makefile
+### 4. Integrate Makefile
 
 - Sample Makefile
 
@@ -212,7 +212,7 @@ run:
 
 ```
 
-#### 5. Integrate `docker`:
+### 5. Integrate `docker`:
 
 - `Dockerfile`:
 
