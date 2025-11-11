@@ -99,6 +99,14 @@
             "pages": [
               "langs/intro-langs",
               {
+                "group": "Git",
+                "icon": "git",
+                "pages": [
+                  "langs/git/essential-git",
+                  "langs/git/emoji-pull-request"
+                ]
+              },
+              {
                 "group": "Go",
                 "icon": "golang",
                 "pages": [
