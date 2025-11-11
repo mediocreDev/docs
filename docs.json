@@ -62,7 +62,7 @@
           {
             "group": "Awesome tools",
             "pages": [
-              "linux/awesome-tools/personal-tool-checklist",          
+              "linux/awesome-tools/personal-tool-checklist",
               {
                 "group": "System",
                 "icon": "terminal",
@@ -82,7 +82,6 @@
                 "pages": [
                   "linux/awesome-tools/applications/docker",
                   "linux/awesome-tools/applications/gpg",
-                  "linux/awesome-tools/applications/nodejs",
                   "linux/awesome-tools/applications/vim",
                   "linux/awesome-tools/applications/others"
                 ]
@@ -103,14 +102,21 @@
                 "group": "Go",
                 "icon": "golang",
                 "pages": [
-                  "langs/Go/essential-go"
+                  "langs/go/essential-go"
+                ]
+              },
+              {
+                "group": "Node.js",
+                "icon": "node",
+                "pages": [
+                  "langs/node/essential-node"
                 ]
               },
               {
                 "group": "Python",
                 "icon": "python",
                 "pages": [
-                  "langs/Python/essential-python"
+                  "langs/python/essential-python"
                 ]
               }
             ]
@@ -125,7 +131,6 @@
             "icon": "rocketchat",
             "pages": [
               "capitalist-slavery/prompting-framework"
-              
             ]
           }
         ]
@@ -202,15 +207,15 @@
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
