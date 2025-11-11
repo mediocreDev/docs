@@ -62,6 +62,7 @@ export const AnimatedYearCounter = ({ startYear = 2016, label = "" }) => {
       <span
         style={{
           display: "inline-block",
+          fontWeight: "bold", // <-- make text bold
           transition: "transform 0.3s ease-in-out, text-shadow 0.3s ease-in-out",
           transform: loopPulse ? "scale(1.05)" : "scale(1)",
           textShadow: loopPulse
