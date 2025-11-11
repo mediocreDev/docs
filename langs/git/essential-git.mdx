@@ -1,13 +1,13 @@
 ---
-title: 'Essential Git'
-description: 'Description of your new file.'
+title: "Essential Git"
+description: "Description of your new file."
 ---
 
 > 🗎 Refs: \
 > [📜Official Document](https://git-scm.com/doc) \
 > [Atlassian Git Tutorial](https://www.atlassian.com/git/tutorials) \
 > [Learn Git Branching](https://learngitbranching.js.org/) \
-> [Visual Git](https://ndpsoftware.com/git-cheatsheet.html#loc=index;) \
+> [Visual Git](https://ndpsoftware.com/git-cheatsheet.html#loc=index;)
 
 ## **Configuring user information**
 
@@ -50,16 +50,19 @@ git clone https://github.com/OliverKain/obsidian-vault
 ```shell
 git stash
 ```
+
 ### List stash
 
 ```shell
 git stash list
 ```
+
 ### Pop stash
 
 ```shell
 git stash pop
 ```
+
 ### Drop the top of stash
 
 ```shell
@@ -88,10 +91,11 @@ git restore --staged path/to/file1.md [path/to/file2.md path/to/file3.md]
 
 # use git-reset
 git reset path/to/file1.md [path/to/file2.md path/to/file3.md]
-
 ```
 
-✍ More advanced usage for git-reset [here](https://git-scm.com/docs/git-reset)
+<Info>
+  More advanced usage for git-reset [here](https://git-scm.com/docs/git-reset)
+</Info>
 
 ### Show changed, not staged differences
 
@@ -113,13 +117,13 @@ git commit -m "Add new .md files"
 
 ## **BRANCH & MERGE**
 
-### List branches (\* indicates current branch)
+### List branches
 
 ```shell
-git branch
+git branch # * indicates current branch
 ```
 
-### New branch at the current commit
+### Branching at the current commit
 
 ```shell
 git branch new-branch-name
