@@ -1,0 +1,43 @@
+---
+title: 'Node JS'
+description: 'NodeJS and its boiz.'
+---
+
+#### NodeJS
+
+```bash
+# Install nodejs, npm
+# Note: corepack
+sudo apt install nodejs npm
+node -v
+npm -v
+
+# (Optional) Install yarn
+# Legacy
+npm install --global yarn
+# Modern
+npm install -g corepack
+corepack enable
+yarn --version
+
+# (Optional) Install pnpm: https://pnpm.io/installation
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+#npm install -g pnpm@latest-10
+
+```
+
+#### pm2
+
+```bash
+sudo npm install -g pm2
+pm2 -v
+```
+
+#### pnpm
+
+```bash
+npx -y pnpm@9 --version
+npx -y pnpm@9 import            # convert package-lock.json -> pnpm-lock.yaml
+npx -y pnpm@9 install           # resolve deps & write a proper pnpm-lock.yaml
+```
+

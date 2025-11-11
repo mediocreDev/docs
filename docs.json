@@ -80,11 +80,30 @@
                 "group": "Application",
                 "icon": "app-store",
                 "pages": [
+                  "linux/awesome-tools/applications/docker",
                   "linux/awesome-tools/applications/gpg",
+                  "linux/awesome-tools/applications/nodejs",
                   "linux/awesome-tools/applications/vim",
                   "linux/awesome-tools/applications/others"
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Langs",
+        "groups": [
+          {
+            "group": "Go",
+            "icon": "golang",
+            "pages": []
+          },
+          {
+            "group": "Python",
+            "icon": "python",
+            "pages": [
+              "langs/Python/python"
             ]
           }
         ]
