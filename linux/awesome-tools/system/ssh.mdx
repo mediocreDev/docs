@@ -1,0 +1,143 @@
+---
+title: 'ssh'
+description: 'SSH personal notes.'
+---
+
+#### SSH via private keys 
+
+```shell
+# Generate key pair (anywhere/at client)
+ssh-keygen -t ed25519 -C "comment (email/action...)"
+
+# Validate by ssh to host using private key file
+ssh -i $PRIVATE_KEY_PATH $USER@$HOST -p $PORT
+
+# View public key (for copying)
+cat ~/.ssh/id_ed25519.pub
+# Windows
+type $env:USERPROFILE\.ssh\id_ed25519.pub
+# Initialize .ssh folder
+mkdir -p ~/.ssh
+# Copy
+echo "PASTE YOUR PUBLIC KEY HERE" >> ~/.ssh/authorized_keys
+# Set permission (just in case)
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+# One-liner - Add public key to the authorized_keys of host's user, create path if not exist (process at client)
+cat $PUBLIC_KEY_PATH | ssh $USER@$HOST -p $PORT "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
+
+#### Change SSH port
+
+- Prerequisites:
+
+```shell
+# Check ssh status
+which sshd
+# Install sshd
+sudo systemctl status ssh
+# Install
+sudo apt update && sudo apt install openssh-server -y
+```
+
+- Modified `sshd_config`
+
+```bash
+# Find/Check location
+find / -name "sshd_config" 2>/dev/null
+# Edit
+sudo vi /etc/ssh/sshd_config
+```
+
+- Search & uncomment `Port 22`, then change to the desired port.
+
+- Restart `ssh` service
+
+```shell
+# Ubuntu
+# Disable ssh.socket
+sudo systemctl disable --now ssh.socket
+sudo systemctl enable --now ssh.service
+#sudo service ssh restart
+sudo systemctl restart ssh
+# CentOS
+systemctl restart sshd
+```
+
+- Allow port via [[ufw]]
+
+- Setup script:
+```shell
+#!/usr/bin/env bash
+set -e
+
+# ==== CONFIG ====
+NEW_PORT=1993                # change this to your desired port
+SSH_CONFIG="/etc/ssh/sshd_config"
+
+echo "🔍 Checking sshd..."
+if ! command -v sshd >/dev/null 2>&1; then
+  echo "⚠️  OpenSSH server not found, installing..."
+  sudo apt update && sudo apt install -y openssh-server
+else
+  echo "✅ sshd found: $(which sshd)"
+fi
+
+echo "🧱 Checking for socket-activation mode..."
+if systemctl is-active --quiet ssh.socket; then
+  echo "⚙️  Disabling socket activation (so custom port works)..."
+  sudo systemctl disable --now ssh.socket
+  sudo systemctl enable --now ssh.service
+else
+  echo "✅ Socket activation not in use or already disabled."
+fi
+
+echo "📝 Backing up sshd_config..."
+sudo cp "$SSH_CONFIG" "${SSH_CONFIG}.bak.$(date +%F_%T)"
+
+echo "✏️  Updating SSH port and disabling root login..."
+sudo sed -i "s/^#Port .*/Port $NEW_PORT/" "$SSH_CONFIG"
+sudo sed -i "s/^Port .*/Port $NEW_PORT/" "$SSH_CONFIG"
+sudo sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" "$SSH_CONFIG"
+sudo sed -i "s/^PermitRootLogin.*/PermitRootLogin no/" "$SSH_CONFIG"
+
+echo "🔍 Validating sshd configuration..."
+sudo sshd -t && echo "✅ sshd configuration OK"
+
+echo "🧱 Adjusting firewall rules..."
+sudo ufw allow $NEW_PORT/tcp || true
+sudo ufw allow 22/tcp || true     # keep old port open for safety
+
+echo "🔁 Restarting SSH service..."
+sudo systemctl restart ssh
+
+echo "🔎 Checking new port..."
+if sudo ss -tuln | grep ":$NEW_PORT" >/dev/null; then
+  echo "✅ SSH is now listening on port $NEW_PORT"
+else
+  echo "⚠️  SSH not yet listening on $NEW_PORT — check /etc/ssh/sshd_config"
+fi
+
+SERVER_IP=$(hostname -I | awk '{print $1}')
+echo ""
+echo "🧪 Test new connection in another terminal:"
+echo "    ssh -p $NEW_PORT $(whoami)@$SERVER_IP"
+echo ""
+echo "⚠️  Keep this session open until you confirm new access works!"
+echo ""
+
+read -p "Press Enter once you successfully connect via new port..."
+
+echo "🚫 Removing old port 22 from firewall..."
+sudo ufw delete allow 22/tcp || true
+
+echo "🛡️ Installing Fail2Ban (optional but recommended)..."
+sudo apt install -y fail2ban
+
+echo ""
+echo "✅ Done! SSH hardened and running on port $NEW_PORT"
+echo "   • Root login disabled"
+echo "   • Fail2Ban active"
+echo "   • Socket activation off (using ssh.service)"
+```
