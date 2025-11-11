@@ -95,6 +95,13 @@
         "tab": "Langs",
         "groups": [
           {
+            "group": "Programming Languages",
+            "icon": "code",
+            "pages": [
+              "langs/intro-langs"
+            ]
+          },
+          {
             "group": "Go",
             "icon": "golang",
             "pages": [
