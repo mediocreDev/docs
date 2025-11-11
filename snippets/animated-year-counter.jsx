@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export const AnimatedYearCounter = ({ startYear = 2018, label = "years (and counting…)" }) => {
+export const AnimatedYearCounter = ({ startYear = 2018, label = "" }) => {
   const currentYear = new Date().getFullYear();
   const totalYears = currentYear - startYear;
 
