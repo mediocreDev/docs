@@ -19,37 +19,6 @@ brew doctor
 brew --version
 ```
 
-#### `Golang`
-
-```shell
-# Check
-go version
-
-# Install
-wget https://go.dev/dl/go1.25.4.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.25.4.linux-amd64.tar.gz
-
-# Setup with Zsh
-vim ~/.zshrc
-# Go compiler
-export PATH="/usr/local/go/bin:$PATH"
-# Go workspace
-export GOPATH="$HOME/go"
-export PATH="$GOPATH/bin:$PATH"
-source ~/.zshrc
-
-# Verify
-go version
-
-# Test
-go env
-mkdir -p ~/go/src/hello
-cd ~/go/src/hello
-echo 'package main; import "fmt"; func main(){ fmt.Println("Hello Go!") }' > main.go
-go run main.go
-```
-
 #### `Eza`
 
 ```shell
