@@ -109,7 +109,7 @@
                 "group": "Node.js",
                 "icon": "node",
                 "pages": [
-                  "langs/node/essential-node"
+                  "langs/node-js/essential-node"
                 ]
               },
               {
