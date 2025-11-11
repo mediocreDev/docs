@@ -1,0 +1,178 @@
+---
+title: 'New file'
+description: 'Description of your new file.'
+---
+
+> 🗎 Refs: \
+> [📜Official Document](https://git-scm.com/doc) \
+> [Atlassian Git Tutorial](https://www.atlassian.com/git/tutorials) \
+> [Learn Git Branching](https://learngitbranching.js.org/) \
+> [Visual Git](https://ndpsoftware.com/git-cheatsheet.html#loc=index;) \
+
+## **Configuring user information**
+
+### Set global name
+
+```shell
+git config --global user.name "Americio Hoag"
+```
+
+### Set global email
+
+```shell
+git config --global user.email "mediocreDev@americio.dev"
+```
+
+### Enable automatic command line coloring
+
+```shell
+git config --global color.ui auto
+```
+
+## **INIT/CLONE REPO**
+
+### Initialize a Git repository
+
+```shell
+git init
+```
+
+### Clone remote repository
+
+```shell
+git clone https://github.com/OliverKain/obsidian-vault
+```
+
+## **STASH**
+
+### Stash changes
+
+```shell
+git stash
+```
+### List stash
+
+```shell
+git stash list
+```
+### Pop stash
+
+```shell
+git stash pop
+```
+### Drop the top of stash
+
+```shell
+git stash drop
+```
+
+## **STAGE & COMMIT**
+
+### Show modified files in the working directory
+
+```shell
+git status
+```
+
+### Stage file(s)
+
+```shell
+git add path/to/file1.md [path/to/file2.md path/to/file3.md]
+```
+
+### Un-stage file(s)
+
+```shell
+# use git-restore
+git restore --staged path/to/file1.md [path/to/file2.md path/to/file3.md]
+
+# use git-reset
+git reset path/to/file1.md [path/to/file2.md path/to/file3.md]
+
+```
+
+✍ More advanced usage for git-reset [here](https://git-scm.com/docs/git-reset)
+
+### Show changed, not staged differences
+
+```shell
+git diff
+```
+
+### Show staged, not committed differences
+
+```shell
+git diff --staged
+```
+
+### Commit staged changes
+
+```shell
+git commit -m "Add new .md files"
+```
+
+## **BRANCH & MERGE**
+
+### List branches (\* indicates current branch)
+
+```shell
+git branch
+```
+
+### New branch at the current commit
+
+```shell
+git branch new-branch-name
+```
+
+### Checkout a branch
+
+```shell
+git checkout existing-branch
+```
+
+### Merge a branch into the current branch
+
+```shell
+git merge need-to-merge-branch
+```
+
+## **REMOTE INTERACTION**
+
+Retrieving updates from another repository:
+
+- **`git remote add [alias] [url]`**: Add a Git URL as an alias.
+- **`git fetch [alias]`**: Fetch down all branches from that Git remote.
+- **`git merge [alias]/[branch]`**: Merge a remote branch into your current branch to bring it up to date.
+- **`git push [alias] [branch]`**: Transmit local branch commits to the remote repository branch.
+- **`git pull`**: Fetch and merge any commits from the tracking remote branch.
+
+## **(WIP) TRACKING PATH CHANGES**
+
+Versioning file removals and path changes:
+
+- **`git rm [file]`**: Delete the file from the project and stage the removal for commit.
+- **`git mv [existing-path] [new-path]`**: Change an existing file path and stage the move.
+
+## **(WIP) REWRITE HISTORY**
+
+Rewriting branches and updating commits:
+
+- **`git rebase [branch]`**: Apply any commits of the current branch ahead of specified one.
+- **`git reset --hard [commit]`**: Clear staging area, rewrite working tree from specified commit.
+
+## **(WIP) INSPECT & COMPARE**
+
+Examining logs, diffs, and object information:
+
+- **`git log`**: Show the commit history for the currently active branch.
+- **`git log branchB..branchA`**: Show commits on branchA that are not on branchB.
+- **`git diff branchB...branchA`** : Show differences in content between two branches.
+
+## **(WIP) IGNORING PATTERNS**
+
+Preventing unintentional staging or committing of files:
+
+- Use `.gitignore`: Save patterns as strings or wildcards to ignore specific files or directories.
+
+This cheat sheet serves as an essential guide for both beginners and experienced users to navigate common Git commands effectively.
