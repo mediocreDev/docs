@@ -172,10 +172,10 @@
           {
             "group": "Endpoint examples",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "z-starter-kit/api-reference/endpoint/get",
+              "z-starter-kit/api-reference/endpoint/create",
+              "z-starter-kit/api-reference/endpoint/delete",
+              "z-starter-kit/api-reference/endpoint/webhook"
             ]
           }
         ]
