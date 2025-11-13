@@ -1,0 +1,325 @@
+---
+title: 'Essential Python'
+description: 'Personal Python snippets'
+---
+
+## Manage python versions with `pyenv`
+
+```shell
+pyenv install 3.8.10
+pyenv install 3.12.9
+
+pyenv global 3.12.9
+
+cd my_project/
+pyenv local 3.8.10
+
+pyenv shell 3.8.10
+pyenv shell --unset
+
+python --version
+pyenv version
+
+pyenv uninstall 3.8.10
+```
+
+
+---
+## Python Boilerplate with `uv`
+### 1. Initialize runnable boilerplate using `uv`
+
+- Clone git initialized project from Github
+
+- Initialize & early dependencies:
+
+```shell
+cd $PROJECT
+pyenv install --list
+pyenv install $VERSION
+pyenv local $VERSION
+uv init --package
+# Check venv
+#uv run which python # Linux
+uv run where python # Windows
+```
+
+- Edit `pyproject.toml` for `name`, `project.scripts`:
+
+```toml
+[project]
+name = "boilerplate_package"
+version = "0.1.0"
+description = "A Python boilerplate made by mediocreDev"
+readme = "README.md"
+authors = [
+    { name = "Americio Hoag", email = "trusted7536@gmail.com" }
+]
+requires-python = ">=3.13.5"
+dependencies = []
+
+[project.scripts]
+boilerplate = "boilerplate_package:main"
+```
+
+- Sample `src/boilerplate_package/__init__.py`:
+
+```python
+import os
+from dotenv import load_dotenv
+
+# Load .env if present
+load_dotenv()
+
+def main() -> None:
+    app_name = os.getenv("APP_NAME", "boilerplate-name")
+    env = os.getenv("APP_ENV", "boilerplate-dev")
+    debug = os.getenv("APP_DEBUG", "false").lower() == "true"
+
+    print(f"🚀 Starting {app_name}")
+    print(f"🌍 Environment: {env}")
+    print(f"🐞 Debug mode: {debug}")
+
+if __name__ == "__main__":
+    main()
+
+```
+
+- Add (early) dependencies, install project, run:
+
+```shell
+# Add some early dependencies
+uv add python-dotenv
+# Install your project (dev)
+uv pip install -e .
+# Fast check
+uv run boilerplate # runner name
+```
+
+### 2. Integrate test, lint...
+
+- Add dependencies:
+
+```shell
+uv add --dev ruff pytest
+```
+
+- Sample `tests/test_basic.py`:
+
+```python
+from boilerplate_package import main
+
+def test_main(capsys):
+    main()
+    captured = capsys.readouterr()
+    assert "🚀 Starting" in captured.out
+
+```
+
+- Run:
+
+```shell
+# Run lint
+uv run ruff check .
+# Run format
+uv run ruff format .
+# Run tests
+uv run pytest
+#uv run pytest -q --disable-warnings --maxfail=1
+```
+### 3. Integrate pre-commit git hook
+
+- Add dependencies:
+
+```shell
+uv add --dev pre-commit
+```
+
+- Sample `root/.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      # Ruff lint
+      - id: ruff-check
+        name: Ruff Lint
+        entry: uv run ruff check
+        language: system
+        types: [python]
+
+      # Ruff format
+      - id: ruff-format
+        name: Ruff Format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+
+      # Run pytest before push
+      - id: pytest
+        name: Run pytest
+        entry: uv run pytest
+        language: system
+        types: [python]
+        stages: [push] # 👈 only runs on git push
+
+```
+
+- Run:
+```shell
+# install hooks into .git/
+uv run pre-commit clean
+uv run pre-commit install
+
+# run once on all files
+uv run pre-commit run --all-files
+```
+
+### 4. Integrate Makefile
+
+- Sample Makefile
+
+```text
+# Python project automation with uv
+
+.PHONY: help set up python environment
+
+help:
+	@echo "Available commands:"
+	@echo "  make install    - Install dependencies (dev + prod)"
+	@echo "  make lint       - Run ruff lint checks"
+	@echo "  make format     - Run black + ruff --fix"
+	@echo "  make test       - Run pytest"
+	@echo "  make precommit  - Run pre-commit on all files"
+	@echo "  make run        - Run main.py with uv"
+
+install:
+	uv sync --all-extras --dev
+
+lint:
+	uv run ruff check .
+
+format:
+	uv run ruff check . --fix
+
+test:
+	uv run pytest -q --disable-warnings --maxfail=1
+
+precommit:
+	uv run pre-commit run --all-files
+
+run:
+	uv run boilerplate
+
+```
+
+### 5. Integrate `docker`:
+
+- `Dockerfile`:
+
+```Dockerfile
+# syntax=docker/dockerfile:1.9
+##############################
+# Builder stage (with uv)
+##############################
+FROM python:3.12-slim AS builder
+
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+# Copy metadata files first (for caching deps)
+COPY pyproject.toml uv.lock README.md LICENSE ./
+
+# Copy source
+COPY src ./src
+
+# Sync deps (prod only, frozen for reproducibility)
+RUN uv sync --frozen --no-dev
+
+# Build wheels for everything (your project + deps)
+RUN uv build --wheel --out dist
+
+##############################
+# Dev image (editable install)
+##############################
+FROM python:3.12-slim AS dev
+
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml uv.lock README.md LICENSE ./
+COPY src ./src
+
+# Install all deps (dev included)
+RUN uv sync --all-extras --dev
+
+# Editable install
+RUN uv pip install -e .
+
+CMD ["uv", "run", "boilerplate"]
+
+##############################
+# Prod runtime (minimal)
+##############################
+FROM python:3.12-slim AS prod
+
+WORKDIR /app
+
+# Copy built wheels from builder
+COPY --from=builder /app/dist /wheels
+
+# Install wheels with pip (no build tools needed)
+RUN pip install --no-cache-dir /wheels/*
+
+# Copy source (if your package needs runtime assets)
+COPY src ./src
+
+CMD ["boilerplate"]
+```
+
+- `docker-compose-overide.yml` (for dev):
+
+```YAML
+services:
+  app:
+    build:
+      target: dev
+    image: ${APP_NAME:-boilerplate}:dev
+    volumes:
+      - ./src:/app/src:cached
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+```
+
+- `docker-compose.yml` (for prd):
+
+```YAML
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_ENV:-prod}
+    image: ${APP_NAME:-boilerplate}:${BUILD_ENV:-prod}
+    container_name: myapp
+    ports:
+      - "6969:6969"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${BUILD_ENV:-prod}
+```
+
+- Run:
+
+```shell
+# Dev build
+docker compose up --build
+# Prod build (force)
+docker compose -f docker-compose.yml up --build
+# Explicit Dev build
+BUILD_ENV=dev docker compose -f docker-compose.yml up --build
+```

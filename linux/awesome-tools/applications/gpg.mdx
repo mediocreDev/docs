@@ -1,0 +1,63 @@
+---
+title: "gpg"
+description: "A powerful and versatile tool for general-purpose cryptography."
+---
+
+## Integrate `gpg` for git commit sign
+
+### Use existing gpg tool in git
+
+```bash
+git config --global gpg.program "F:\soft\Git\usr\bin\gpg.exe"
+```
+
+### View git configs (local, global)
+
+```bash
+git config --global --list
+git config --local --list
+```
+
+### Unset/Set git config (local, global)
+
+```bash
+git config --local --unset user.signingkey
+git config --global--unset user.signingkey
+git config --global --unset gpg.format
+git config --global commit.gpgsign true
+git config --global user.signingkey 14A98B3087087ECD
+```
+
+### List gpg keys
+
+```bash
+"F:\soft\Git\usr\bin\gpg.exe" --list-secret-keys
+"F:\soft\Git\usr\bin\gpg.exe" --list-secret-keys --keyid-format=long
+"F:\soft\Git\usr\bin\gpg.exe" --list-keys
+```
+
+### Generate gpg key
+
+```bash
+"F:\soft\Git\usr\bin\gpg.exe" --full-generate-key
+```
+
+### Export gpg keys
+
+```bash
+"F:\soft\Git\usr\bin\gpg.exe" --armor --export 14A98B3087087ECD
+"F:\soft\Git\usr\bin\gpg.exe" --export -a hq.my@dai-ichi-life.com.vn > public.key
+"F:\soft\Git\usr\bin\gpg.exe" -o private.gpg --export-options backup --export-secret-keys <hq.my@dai-ichi-life.com.vn>
+"F:\soft\Git\usr\bin\gpg.exe" --export-secret-key -a hq.my@dai-ichi-life.com.vn > private key
+```
+
+### Import gpg keys
+
+```bash
+"F:\soft\Git\usr\bin\gpg.exe" --import-options restore --import private.gpg
+"F:\soft\Git\usr\bin\gpg.exe" --edit-key <hq.my@dai-ichi-life.com.vn>
+trust
+quit
+"F:\soft\Git\usr\bin\gpg.exe" --import public.key
+"F:\soft\Git\usr\bin\gpg.exe" --import private.key
+```

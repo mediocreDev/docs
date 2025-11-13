@@ -1,0 +1,40 @@
+---
+title: "Monitoring"
+description: "Commands for monitoring system"
+icon: "binoculars"
+---
+
+#### Check if port is in use
+
+> 🗎 **Refs**: [Check port in use on Linux](https://www.cyberciti.biz/faq/unix-linux-check-if-port-is-in-use-command/)
+
+```shell
+sudo lsof -i -P -n | grep LISTEN
+sudo lsof -i:$PORT
+sudo ss -tulpn | grep LISTEN
+sudo nmap -sTU -O $IP_ADDRESS
+```
+
+#### Check local IP
+
+```bash
+ip -4 addr show | grep inet
+```
+
+#### Check `systemctl` services
+
+```bash
+# Specified service
+sudo systemctl status $SERVICE_NAME
+# All running services:
+sudo systemctl --type=service
+```
+
+#### Check disk usage
+
+```shell
+echo "Free disk space:" && \
+df -h ~ | awk 'NR==2 {print $4 " available on " $6}' && \
+echo -e "\nTop 5 largest directories in $HOME:" && \
+du -h --max-depth=1 ~ | sort -hr | head -n 5
+```

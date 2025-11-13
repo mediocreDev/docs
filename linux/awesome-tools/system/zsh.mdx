@@ -1,0 +1,60 @@
+---
+title: "Zsh"
+description: "Personal Zsh configs."
+---
+
+#### Commons
+
+```shell
+# Check version
+zsh --version
+
+# Install
+sudo apt install zsh
+
+# Set default shell
+chsh -s $(which zsh)
+#chsh -s $(which bash)
+
+# Log out
+logout
+
+# Post-check
+echo $SHELL
+$SHELL --version
+
+# Install oh-my-zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# Install plugins
+# Go to your custom plugins directory
+mkdir -p ~/.oh-my-zsh/custom/plugins
+cd ~/.oh-my-zsh/custom/plugins
+
+# Install zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-autosuggestions.git
+
+# Install zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
+
+# Personal .zshrc (OliverKain/.zshrc)
+curl -L https://gist.github.com/OliverKain/fdd2d1c9dcfeba3f8946960a2ed5990e/raw -o ~/.zshrc && echo "✅ saved to filename"
+
+# Simple zsh (for web terminal)
+export LANG=en_US.UTF-8 TERM=xterm-256color; PROMPT='%n@%m:%~%# '
+```
+
+#### Install `powerlevel10k` theme to `Oh-my-zsh`
+
+```shell
+# Download
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+
+# Set ~/.zshrc
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+# Reload
+source ~/.zshrc
+
+# Go through the wizard
+```

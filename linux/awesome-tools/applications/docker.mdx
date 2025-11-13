@@ -1,0 +1,117 @@
+---
+title: '(WIP...) docker'
+description: 'Docker @ Linux/Ubuntu'
+---
+
+> 🗎 Refs: \
+> https://dockerlabs.collabnix.com/docker/cheatsheet/
+
+### Monitor
+
+```shell
+# List all container
+# -a => all (running & stopped)
+# -s => size
+# --no-trunc => no truncated IDs/commands
+# -q => quiet (only IDs)
+docker ps -as --no-trunc
+docker ps -aq
+
+# List all container (name only)
+docker inspect --format='{{.Name}}' $(docker ps -aq --no-trunc)
+
+# List container filtered (-f => --filter)
+# Multiple filters can be applied
+# by status (exited/running)
+docker ps -f "status=exited"
+docker ps -f "status=running"
+# by port
+docker ps -f "publish=5800"
+# by exited code
+docker ps -f "exited=1"
+
+# List recently created container
+docker ps -aq
+
+# Inspect a running container
+docker inspect $CONTAINER_NAME
+docker inspect $CONTAINER_ID
+
+# Fetch and follow the logs of a container:
+docker logs -f $CONTAINER_NAME
+
+# View resource usage stats
+docker container stats
+```
+
+### Operate
+
+```shell
+# Run a container with published port
+docker run -p $HOST_PORT:$CONTAINER_PORT $IMAGE_NAME
+
+# Run a container in the background
+docker run -d
+
+# Start an existing container
+docker start $CONTAINER_NAME
+#docker start $CONTAINER_ID
+
+# Stop a running container
+docker stop $CONTAINER_NAME
+#docker stop $CONTAINER_ID
+
+# Remove astopped container
+docker rm $CONTAINER_NAME
+
+# Open a shell inside a running container:
+docker exec -it $CONTAINER_NAME sh
+
+# List currently running containers
+: docker ps List all docker containers (running and stopped): docker ps --all 
+```
+
+#### Add SSH actor into `docker` group
+
+```shell
+sudo usermod -aG docker $USER
+```
+
+#### Clear logs
+
+```shell
+# All docker logs
+sudo find /var/lib/docker/containers/ -name "*-json.log" -type f -exec truncate -s 0 {} \;
+
+# Search
+docker inspect --format='{{.LogPath}}' $CONTAINER_NAME_OR_ID
+sudo truncate -s 0 /path/to/container-log-json.log
+```
+
+#### Config log rotation
+
+```shell
+docker run -d \
+  --log-opt max-size=100m \
+  --log-opt max-file=3 \
+  $APP_NAME
+```
+
+### Specific tools/apps
+
+#### MySQL
+
+```shell
+docker run --name DUMMY-DB -e MYSQL_ROOT_PASSWORD=P@ssw0rd -d -p 3316:3306 mysql:8.0.32
+```
+
+#### Firefox
+
+```shell
+# Example port: 5800
+docker run -d \
+    --name=firefox \
+    -p $FIREFOX_PORT$:$FIREFOX_PORT \
+    -v /docker/appdata/firefox:/config:rw \
+    jlesage/firefox
+```

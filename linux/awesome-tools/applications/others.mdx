@@ -1,0 +1,40 @@
+---
+title: "Other tools"
+description: "A quick glance for the other tools."
+---
+
+#### `Homebrew`
+
+```shell
+# Install
+sudo apt update
+sudo apt install -y build-essential procps curl file git
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# For Zsh
+echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.zshrc
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+source ~/.zshrc
+# Verify
+brew doctor
+brew --version
+```
+
+#### `Eza`
+
+```shell
+# Install
+brew install lsd
+
+# Customized command
+eza -la --icons --group-directories-first --git --color=always --time-style=long-iso --header --tree --level=2 -h --sort=modified -I ".git|node_modules"
+```
+
+#### `Lsd`
+
+```shell
+# Install
+brew install lsd
+
+# Customized command
+lsd -la --icon=always --group-dirs=first --git --tree --depth 2 -h --sort time --reverse --ignore-glob ".git" --ignore-glob "node_modules" 
+```

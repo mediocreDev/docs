@@ -1,48 +1,161 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Americio's Scraps",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "_assets/favicon.svg",
   "navigation": {
     "tabs": [
+      {
+        "tab": "Langs",
+        "groups": [
+          {
+            "group": "Programming Languages",
+            "icon": "code",
+            "pages": [
+              "index",
+              {
+                "group": "Git",
+                "icon": "git",
+                "pages": [
+                  "langs/git/essential-git",
+                  "langs/git/emoji-pull-request"
+                ]
+              },
+              {
+                "group": "Go",
+                "icon": "golang",
+                "pages": [
+                  "langs/go/essential-go"
+                ]
+              },
+              {
+                "group": "Node.js",
+                "icon": "node",
+                "pages": [
+                  "langs/node-js/essential-node"
+                ]
+              },
+              {
+                "group": "Python",
+                "icon": "python",
+                "pages": [
+                  "langs/python/essential-python"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Linux",
+        "groups": [
+          {
+            "group": "Swiss Army knives",
+            "pages": [
+              "linux/swiss-army-knives/file",
+              "linux/swiss-army-knives/user",
+              "linux/swiss-army-knives/monitoring",
+              "linux/swiss-army-knives/snippets"
+            ]
+          },
+          {
+            "group": "Awesome tools",
+            "pages": [
+              "linux/awesome-tools/personal-tool-checklist",
+              {
+                "group": "System",
+                "icon": "terminal",
+                "pages": [
+                  "linux/awesome-tools/system/nginx",
+                  "linux/awesome-tools/system/ssh",
+                  "linux/awesome-tools/system/systemctl",
+                  "linux/awesome-tools/system/tmux",
+                  "linux/awesome-tools/system/ufw",
+                  "linux/awesome-tools/system/web-terminal",
+                  "linux/awesome-tools/system/zsh"
+                ]
+              },
+              {
+                "group": "Application",
+                "icon": "app-store",
+                "pages": [
+                  "linux/awesome-tools/applications/docker",
+                  "linux/awesome-tools/applications/gpg",
+                  "linux/awesome-tools/applications/vim",
+                  "linux/awesome-tools/applications/others"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Captialist Slavery",
+        "groups": [
+          {
+            "group": "Ây Ai(zaaa...)",
+            "icon": "rocketchat",
+            "pages": [
+              "capitalist-slavery/prompting-framework"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Trading Dojo (WIP)",
+        "groups": [
+          {
+            "group": "Legacies",
+            "icon": "landmark-dome",
+            "pages": [
+              {
+                "group": "HELEN's",
+                "pages": [
+                  "trading-dojo/legacies/helen/bookmarks",
+                  "trading-dojo/legacies/helen/helen-candle-patterns"
+                ]
+              }
+            ]
+          }
+        ]
+      },
       {
         "tab": "Guides",
         "groups": [
           {
             "group": "Getting started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "z-starter-kit/quickstart",
+              "z-starter-kit/development"
             ]
           },
           {
             "group": "Customization",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "z-starter-kit/essentials/settings",
+              "z-starter-kit/essentials/navigation"
             ]
           },
           {
             "group": "Writing content",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "z-starter-kit/essentials/markdown",
+              "z-starter-kit/essentials/code",
+              "z-starter-kit/essentials/images",
+              "z-starter-kit/essentials/reusable-snippets"
             ]
           },
           {
             "group": "AI tools",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "z-starter-kit/ai-tools/cursor",
+              "z-starter-kit/ai-tools/claude-code",
+              "z-starter-kit/ai-tools/windsurf"
             ]
           }
         ]
@@ -71,27 +184,27 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
+          "anchor": "Mintlify Docs",
           "href": "https://mintlify.com/docs",
           "icon": "book-open-cover"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "anchor": "InoReader",
+          "href": "https://www.inoreader.com/all_articles",
           "icon": "newspaper"
         }
       ]
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "_assets/logo/light.svg",
+    "dark": "_assets/logo/dark.svg"
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "Discuss",
+        "href": "mailto:hoangquocmy@gmail.com"
       }
     ],
     "primary": {
@@ -102,21 +215,20 @@
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/americio0705",
+      "github": "https://github.com/OliverKain"
     }
   }
 }

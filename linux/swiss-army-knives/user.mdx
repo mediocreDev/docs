@@ -1,0 +1,78 @@
+---
+title: "User"
+description: "User-related commands."
+icon: "users"
+---
+
+#### List users
+
+```shell
+# List all users
+cat /etc/passwd
+cut -d: -f1 /etc/passwd
+who
+users
+# List system users
+awk -F':' '$3 < 1000 {print $1}' /etc/passwd
+# List normal users
+awk -F':' '$3 >= 1000 {print $1}' /etc/passwd
+# List all users
+getent passwd
+# List all groups
+getent group
+```
+
+#### Create user
+
+```shell
+sudo adduser americio
+#sudo mkhomedir_helper americio
+sudo usermod -aG sudo americio
+#sudo passwd americio
+su americio
+```
+
+#### Reset password
+
+```shell
+sudo passwd $USER_NAME
+```
+
+#### User Information
+
+```shell
+id $USERNAME
+# Current logged-in user
+id
+# Detailed User Info (from /etc/passwd)
+getent passwd $USERNAME
+# User's groups
+groups username
+```
+
+#### Rename user group
+
+```shell
+sudo groupmod -n $NEW_GROUP_NAME $OLD_GROUP_NAME
+```
+
+#### Change host name:
+
+- Edit `/etc/hosts`
+
+```shell
+127.0.0.1       localhost
+127.0.1.1       $HOST-NAME
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost   ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+```
+
+- Change host name
+
+```shell
+sudo hostnamectl set-hostname $HOST-NAME
+```

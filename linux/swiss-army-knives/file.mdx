@@ -1,0 +1,84 @@
+---
+title: "Folder/File Manipulation"
+description: "Common cases when create/move/copy/delete folders or files."
+icon: "paperclip"
+---
+
+#### List files (ls) with detail
+
+```shell
+ls -l -d1 */
+ls -hla
+ls -R
+```
+
+#### Copy (can add new name)
+
+```shell
+cp old-path new-path
+```
+
+#### Move (can rename)
+
+```shell
+mv old-path new-path
+```
+
+#### Delete (empty folder and contents)
+
+```shell
+rm -rf path-to-folder/-or-file
+```
+
+#### Create a folder
+
+```shell
+mkdir path-to-new-folder
+```
+
+#### Create path
+
+```shell
+mkdir -p path/to/new/folder
+```
+
+#### Set folder permission for user (not change ownership)
+
+```shell
+sudo apt-get update
+sudo apt-get install -y acl
+setfacl -R -m u:deploy:rwx $TARGET_FOLDER
+setfacl -R -d -m u:deploy:rwx $TARGET_FOLDER
+```
+
+#### Change ownership folder recursively
+
+```shell
+sudo chown -R $USER:$GROUP $TARGET_FOLDER
+```
+
+#### Install .deb
+
+```shell
+sudo dpkg -i software.deb
+```
+
+#### Extract tar
+
+```shell
+sudo tar -C /usr/local -xzf test.tar.gz
+```
+
+#### Compress tar
+
+```shell
+tar -czvf archive-name.tar.gz foldername/
+```
+
+#### Shortcut location
+
+> /usr/share/applications/ \
+> /var/lib/flatpak/app/ \
+> /current/active/export/share/applications/ \
+> /home/americio/.local/share/applications/
+> 

@@ -1,0 +1,26 @@
+---
+title: "Snippets"
+description: "Some usefull snippets"
+icon: "wrench"
+---
+
+#### Trial Reset `BCompare` in Linux
+
+```shell
+# Install
+sudo dpkg -i beyondcompare-*.deb
+sudo apt-get -f install  # Fix dependencies if needed
+
+# Find location
+dpkg -L bcompare
+rpm -ql bcompare
+
+# Edit file
+sudo mv /usr/bin/bcompare /usr/bin/bcompare.real
+sudo vim /usr/bin/bcompare
+
+# Add these lines
+#!/bin/sh
+rm -rf /home/{{USER}}/.config/bcompare/registry.dat
+bcompare.real $@
+```
