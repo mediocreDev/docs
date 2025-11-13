@@ -167,7 +167,7 @@
           {
             "group": "API documentation",
             "pages": [
-              "api-reference/introduction"
+              "z-starter-kit/api-reference/introduction"
             ]
           },
           {
