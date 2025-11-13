@@ -11,38 +11,42 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Langs",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Programming Languages",
+            "icon": "code",
             "pages": [
               "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              {
+                "group": "Git",
+                "icon": "git",
+                "pages": [
+                  "langs/git/essential-git",
+                  "langs/git/emoji-pull-request"
+                ]
+              },
+              {
+                "group": "Go",
+                "icon": "golang",
+                "pages": [
+                  "langs/go/essential-go"
+                ]
+              },
+              {
+                "group": "Node.js",
+                "icon": "node",
+                "pages": [
+                  "langs/node-js/essential-node"
+                ]
+              },
+              {
+                "group": "Python",
+                "icon": "python",
+                "pages": [
+                  "langs/python/essential-python"
+                ]
+              }
             ]
           }
         ]
@@ -91,47 +95,6 @@
         ]
       },
       {
-        "tab": "Langs",
-        "groups": [
-          {
-            "group": "Programming Languages",
-            "icon": "code",
-            "pages": [
-              "langs/intro-langs",
-              {
-                "group": "Git",
-                "icon": "git",
-                "pages": [
-                  "langs/git/essential-git",
-                  "langs/git/emoji-pull-request"
-                ]
-              },
-              {
-                "group": "Go",
-                "icon": "golang",
-                "pages": [
-                  "langs/go/essential-go"
-                ]
-              },
-              {
-                "group": "Node.js",
-                "icon": "node",
-                "pages": [
-                  "langs/node-js/essential-node"
-                ]
-              },
-              {
-                "group": "Python",
-                "icon": "python",
-                "pages": [
-                  "langs/python/essential-python"
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
         "tab": "Captialist Slavery",
         "groups": [
           {
@@ -157,6 +120,42 @@
                   "trading-dojo/legacies/helen/helen-candle-patterns"
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "z-starter-kit/quickstart",
+              "z-starter-kit/development"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "z-starter-kit/essentials/settings",
+              "z-starter-kit/essentials/navigation"
+            ]
+          },
+          {
+            "group": "Writing content",
+            "pages": [
+              "z-starter-kit/essentials/markdown",
+              "z-starter-kit/essentials/code",
+              "z-starter-kit/essentials/images",
+              "z-starter-kit/essentials/reusable-snippets"
+            ]
+          },
+          {
+            "group": "AI tools",
+            "pages": [
+              "z-starter-kit/ai-tools/cursor",
+              "z-starter-kit/ai-tools/claude-code",
+              "z-starter-kit/ai-tools/windsurf"
             ]
           }
         ]
