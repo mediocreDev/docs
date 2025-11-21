@@ -1,0 +1,58 @@
+    [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "z-starter-kit/quickstart",
+              "z-starter-kit/development"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "z-starter-kit/essentials/settings",
+              "z-starter-kit/essentials/navigation"
+            ]
+          },
+          {
+            "group": "Writing content",
+            "pages": [
+              "z-starter-kit/essentials/markdown",
+              "z-starter-kit/essentials/code",
+              "z-starter-kit/essentials/images",
+              "z-starter-kit/essentials/reusable-snippets"
+            ]
+          },
+          {
+            "group": "AI tools",
+            "pages": [
+              "z-starter-kit/ai-tools/cursor",
+              "z-starter-kit/ai-tools/claude-code",
+              "z-starter-kit/ai-tools/windsurf"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "groups": [
+          {
+            "group": "API documentation",
+            "pages": [
+              "z-starter-kit/api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoint examples",
+            "pages": [
+              "z-starter-kit/api-reference/endpoint/get",
+              "z-starter-kit/api-reference/endpoint/create",
+              "z-starter-kit/api-reference/endpoint/delete",
+              "z-starter-kit/api-reference/endpoint/webhook"
+            ]
+          }
+        ]
+      }
+    ]
