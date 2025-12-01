@@ -66,7 +66,6 @@ systemctl restart sshd
 
 - Allow port via [[ufw]]
 - Setup script:
-- 
 
 <CodeGroup>
 
@@ -152,41 +151,52 @@ echo "   • Socket activation off (using ssh.service)"
 NEW_PORT=1993                 # change if you want a different SSH port
 DISABLE_PASSWORD_AUTH=false   # set to false if you want to keep password login
 DISABLE_ROOT_LOGIN=true       # disable direct root login
+SSHD_CONFIG="/etc/ssh/sshd_config"
 
-echo "== Updating system =="
+echo "📦 Updating system"
 sudo dnf -y update
 
-echo "== Installing firewalld and fail2ban =="
+echo "📦 Installing firewalld and fail2ban"
 sudo dnf -y install firewalld fail2ban
 
-echo "== Enabling firewalld =="
+echo "📦 Installing semanage, just in case"
+sudo dnf install policycoreutils-python-utils
+
+echo "⚡ Enabling firewalld"
 sudo systemctl enable --now firewalld
 
-echo "== Configuring firewall rules =="
+echo "⚙️ Configuring firewall rules"
 sudo firewall-cmd --permanent --add-service=ssh   # keep existing port open for now
 sudo firewall-cmd --permanent --add-port=${NEW_PORT}/tcp
 sudo firewall-cmd --reload
 
-echo "== Editing SSH config =="
-SSHD_CONFIG="/etc/ssh/sshd_config"
-
+echo "✏️ Editing SSH config - change port"
 sudo sed -i "s/^#Port.*/Port ${NEW_PORT}/" $SSHD_CONFIG
 sudo sed -i "s/^Port .*/Port ${NEW_PORT}/" $SSHD_CONFIG
 
-if [ "$DISABLE_ROOT_LOGIN" = true ]; then
-    sudo sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
-    sudo sed -i "s/^PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
+#echo "✏️ Editing SSH config - disable root login"
+#if [ "$DISABLE_ROOT_LOGIN" = true ]; then
+#    sudo sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
+#    sudo sed -i "s/^PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
+#fi
+
+#echo "✏️ Editing SSH config - disable authentication via password"
+#if [ "$DISABLE_PASSWORD_AUTH" = true ]; then
+#    sudo sed -i "s/^#PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
+#    sudo sed -i "s/^PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
+#fi
+
+echo "⚙️ Configuring SELinux SSH port permission"
+if [ "$(getenforce)" = "Enforcing" ]; then
+    sudo semanage port -a -t ssh_port_t -p tcp "$NEW_SSH_PORT"
+else
+    echo "SELinux is not Enforcing (it is Disabled or Permissive). No semanage action needed."
 fi
 
-if [ "$DISABLE_PASSWORD_AUTH" = true ]; then
-    sudo sed -i "s/^#PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
-    sudo sed -i "s/^PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
-fi
-
-echo "== Restarting SSH =="
+echo "🔄 Restarting SSH"
 sudo systemctl restart sshd
 
-echo "== Configuring Fail2Ban =="
+echo "⚙️ Configuring Fail2Ban"
 sudo bash -c 'cat > /etc/fail2ban/jail.local' <<EOF
 [sshd]
 enabled = true
@@ -196,9 +206,10 @@ maxretry = 5
 bantime = 10m
 EOF
 
+echo "⚡ Enabling Fail2Ban"
 sudo systemctl enable --now fail2ban
 
-echo "== HARDENING COMPLETE =="
+echo "🎯 HARDENING SSH COMPLETED"
 echo "IMPORTANT: Open a new terminal and test logging into SSH on port ${NEW_PORT} before closing this session!"
 ```
 
