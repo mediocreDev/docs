@@ -1,9 +1,9 @@
 ---
-title: 'ssh'
-description: 'SSH personal notes.'
+title: "ssh"
+description: "SSH personal notes."
 ---
 
-#### SSH via private keys 
+#### SSH via private keys
 
 ```shell
 # Generate key pair (anywhere/at client)
@@ -51,7 +51,6 @@ sudo vi /etc/ssh/sshd_config
 ```
 
 - Search & uncomment `Port 22`, then change to the desired port.
-
 - Restart `ssh` service
 
 ```shell
@@ -66,9 +65,12 @@ systemctl restart sshd
 ```
 
 - Allow port via [[ufw]]
-
 - Setup script:
-```shell
+- 
+
+<CodeGroup>
+
+```shell ubuntu.sh
 #!/usr/bin/env bash
 set -e
 
@@ -141,3 +143,63 @@ echo "   • Root login disabled"
 echo "   • Fail2Ban active"
 echo "   • Socket activation off (using ssh.service)"
 ```
+
+
+```shell almalinux.sh
+#!/bin/bash
+
+# === CONFIGURABLE SETTINGS ===
+NEW_PORT=1993                 # change if you want a different SSH port
+DISABLE_PASSWORD_AUTH=false   # set to false if you want to keep password login
+DISABLE_ROOT_LOGIN=true       # disable direct root login
+
+echo "== Updating system =="
+sudo dnf -y update
+
+echo "== Installing firewalld and fail2ban =="
+sudo dnf -y install firewalld fail2ban
+
+echo "== Enabling firewalld =="
+sudo systemctl enable --now firewalld
+
+echo "== Configuring firewall rules =="
+sudo firewall-cmd --permanent --add-service=ssh   # keep existing port open for now
+sudo firewall-cmd --permanent --add-port=${NEW_PORT}/tcp
+sudo firewall-cmd --reload
+
+echo "== Editing SSH config =="
+SSHD_CONFIG="/etc/ssh/sshd_config"
+
+sudo sed -i "s/^#Port.*/Port ${NEW_PORT}/" $SSHD_CONFIG
+sudo sed -i "s/^Port .*/Port ${NEW_PORT}/" $SSHD_CONFIG
+
+if [ "$DISABLE_ROOT_LOGIN" = true ]; then
+    sudo sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
+    sudo sed -i "s/^PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
+fi
+
+if [ "$DISABLE_PASSWORD_AUTH" = true ]; then
+    sudo sed -i "s/^#PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
+    sudo sed -i "s/^PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
+fi
+
+echo "== Restarting SSH =="
+sudo systemctl restart sshd
+
+echo "== Configuring Fail2Ban =="
+sudo bash -c 'cat > /etc/fail2ban/jail.local' <<EOF
+[sshd]
+enabled = true
+port = ${NEW_PORT}
+logpath = /var/log/secure
+maxretry = 5
+bantime = 10m
+EOF
+
+sudo systemctl enable --now fail2ban
+
+echo "== HARDENING COMPLETE =="
+echo "IMPORTANT: Open a new terminal and test logging into SSH on port ${NEW_PORT} before closing this session!"
+```
+
+</CodeGroup>
