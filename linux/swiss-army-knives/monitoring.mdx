@@ -9,10 +9,14 @@ icon: "binoculars"
 > 🗎 **Refs**: [Check port in use on Linux](https://www.cyberciti.biz/faq/unix-linux-check-if-port-is-in-use-command/)
 
 ```shell
+# Ubuntu
 sudo lsof -i -P -n | grep LISTEN
 sudo lsof -i:$PORT
 sudo ss -tulpn | grep LISTEN
 sudo nmap -sTU -O $IP_ADDRESS
+
+# AlmaLinux
+sudo firewall-cmd --list-ports
 ```
 
 #### Check local IP

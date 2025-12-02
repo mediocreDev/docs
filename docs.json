@@ -75,6 +75,7 @@
                   "linux/awesome-tools/system/ssh",
                   "linux/awesome-tools/system/systemctl",
                   "linux/awesome-tools/system/tmux",
+                  "linux/awesome-tools/system/firewalld",
                   "linux/awesome-tools/system/ufw",
                   "linux/awesome-tools/system/web-terminal",
                   "linux/awesome-tools/system/zsh"

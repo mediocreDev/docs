@@ -1,0 +1,98 @@
+---
+title: "firewald (WIP...)"
+---
+
+> 🗎 Refs: \
+> https://blog.programster.org/ufw-cheatsheet \
+> https://www.cyberciti.biz/faq/unix-linux-check-if-port-is-in-use-command/
+
+#### Installation
+
+```shell
+sudo dnf update && sudo dnf -y install firewalld
+```
+
+#### Enable/Disable/Reload
+
+```shell
+# Start (in-memory)
+sudo systemctl start firewalld
+
+# Enable at boot
+sudo systemctl enable firewalld
+
+# Stop
+sudo systemctl stop firewalld
+
+# Disable at boot
+sudo systemctl disable firewalld
+
+# Reload (keeps stateful connections)
+sudo firewall-cmd --reload
+```
+
+#### Check status
+
+```bash
+# Status of daemon
+sudo firewall-cmd --state
+
+# View (active) zones
+sudo firewall-cmd --get-zones
+sudo firewall-cmd --get-active-zones
+
+# List all zones + settings
+sudo firewall-cmd --list-all-zones
+
+# List all rules for active zone(s)
+sudo firewall-cmd --list-all
+
+# List all applied config by zone
+sudo firewall-cmd --list-all --zone=public
+```
+
+#### Initial setup
+
+```shell
+# Set default zone to drop
+# Note: In drop zone, outgoing is ALLOWED by default, incoming is DROPPED.
+sudo firewall-cmd --set-default-zone=drop
+```
+
+> ✍🏻**Tips**: Common zones: `public`, `home`, `work`, `drop`, `trusted`.
+
+#### Add rule
+
+```shell
+# Allow port
+sudo ufw allow $PORT_NUMBER
+sudo ufw allow $PORT_NUMBER/tcp
+# note: must allow the modified port of ssh first before restarting SSH
+
+# Allow IP
+sudo ufw allow from $IP_ADDRESS
+
+# Allow IP range
+sudo ufw allow from $IP/$CIDR
+
+# Allow IP range on one port
+sudo ufw allow from $IP/$CIDR to any port $PORT_NUMBER
+
+# Block incoming requests from IP
+sudo ufw insert 1 deny from $IP_ADDRESS
+# note: insert 1 for on top of rule list, ufw follows the order of the rules
+sudo ufw deny from $IP_ADDRESS # when there is no rule
+
+# Block outgoing requests to IP
+sudo ufw deny out from any to $IP_ADDRESS
+
+# note: ssh is always an alias of 22
+sudo ufw allow ssh
+#sudo ufw allow 22
+```
+
+#### Delete allowed ports
+
+```shell
+sudo firewall-cmd --zone=public --remove-port=22/tcp --permanent
+```
