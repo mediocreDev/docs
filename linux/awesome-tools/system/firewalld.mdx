@@ -1,5 +1,6 @@
 ---
-title: "firewald (WIP...)"
+title: "firewald"
+description: "Advanced firewall (AlmaLinux default)"
 ---
 
 > 🗎 Refs: \
@@ -48,7 +49,13 @@ sudo firewall-cmd --list-all-zones
 sudo firewall-cmd --list-all
 
 # List all applied config by zone
-sudo firewall-cmd --list-all --zone=public
+sudo firewall-cmd --zone=public --list-all
+
+# Get default zone
+sudo firewall-cmd --get-default
+
+# List all defined services
+sudo firewall-cmd --get-services
 ```
 
 #### Initial setup
@@ -57,6 +64,9 @@ sudo firewall-cmd --list-all --zone=public
 # Set default zone to drop
 # Note: In drop zone, outgoing is ALLOWED by default, incoming is DROPPED.
 sudo firewall-cmd --set-default-zone=drop
+
+# Add interface eth0 to specified zone
+#sudo firewall-cmd --change-interface=eth0 --zone=home
 ```
 
 > ✍🏻**Tips**: Common zones: `public`, `home`, `work`, `drop`, `trusted`.
@@ -64,35 +74,27 @@ sudo firewall-cmd --set-default-zone=drop
 #### Add rule
 
 ```shell
-# Allow port
-sudo ufw allow $PORT_NUMBER
-sudo ufw allow $PORT_NUMBER/tcp
-# note: must allow the modified port of ssh first before restarting SSH
+# Remove `--permanent` for temporary rule (until system reboot/ firewalld reload)
+sudo firewall-cmd --zone=public --permanent --add-service=http
 
-# Allow IP
-sudo ufw allow from $IP_ADDRESS
+# Allow traffic on `murmur` ports in zone `home`
+sudo firewall-cmd --zone=home --add-service murmur
 
-# Allow IP range
-sudo ufw allow from $IP/$CIDR
+# Allow TCP traffic on port `123` in zone `home`
+sudo firewall-cmd --zone=home --add-port=123/tcp
 
-# Allow IP range on one port
-sudo ufw allow from $IP/$CIDR to any port $PORT_NUMBER
+# Reload to apply
+sudo firewall-cmd --reload
 
-# Block incoming requests from IP
-sudo ufw insert 1 deny from $IP_ADDRESS
-# note: insert 1 for on top of rule list, ufw follows the order of the rules
-sudo ufw deny from $IP_ADDRESS # when there is no rule
-
-# Block outgoing requests to IP
-sudo ufw deny out from any to $IP_ADDRESS
-
-# note: ssh is always an alias of 22
-sudo ufw allow ssh
-#sudo ufw allow 22
+# Direct rule
+# Permit IPv6 traffic from/to tap0
+sudo firewall-cmd --direct --passthrough ipv6 -I FORWARD -o tap0 -j ACCEPT
+sudo firewall-cmd --direct --passthrough ipv6 -I FORWARD -i tap0 -j ACCEPT
 ```
 
-#### Delete allowed ports
+#### Delete rule
 
 ```shell
-sudo firewall-cmd --zone=public --remove-port=22/tcp --permanent
+sudo firewall-cmd --zone=public --permanent --remove-port=22/tcp
+sudo firewall-cmd --zone=public --remove-service murmur
 ```
