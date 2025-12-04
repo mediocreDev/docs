@@ -223,6 +223,7 @@ backend = systemd
 logpath = journal
 EOF
 
+
 echo "🔄 Restarting Fail2ban..."
 sudo systemctl restart fail2ban
 
@@ -359,6 +360,8 @@ EOF
 
 	echo "✅ auditd hardening rules installed!"
 fi
+
+echo "💯 Finished initial VPS Setup! Goodbye!"
 ```
 
 
