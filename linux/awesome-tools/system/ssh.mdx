@@ -65,12 +65,14 @@ sudo systemctl restart ssh
 systemctl restart sshd
 ```
 
-- Allow port via [[ufw]]
-- Setup script:
+- Allow port via [[ufw]]/[firewalld]
+- Apply fail2ban
+
+#### Setup script:
 
 <CodeGroup>
 
-```shell ubuntu.sh
+```shell ubuntu.sh expandable
 #!/usr/bin/env bash
 set -e
 
@@ -537,3 +539,13 @@ echo "Keep your existing SSH session open while testing."
 ```
 
 </CodeGroup>
+
+- Run:
+
+```shell
+curl -O https://gist.githubusercontent.com/username/abcdef1234567890/raw/harden.sh
+chmod +x ./harden.sh
+sudo ./harden.sh
+# One-liner, no download
+curl -sSL https://gist.githubusercontent.com/username/abcdef1234567890/raw/harden.sh | sudo bash
+```
