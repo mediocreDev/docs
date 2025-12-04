@@ -74,74 +74,289 @@ systemctl restart sshd
 #!/usr/bin/env bash
 set -e
 
-# ==== CONFIG ====
-NEW_PORT=1993                # change this to your desired port
-SSH_CONFIG="/etc/ssh/sshd_config"
+### ===== CUSTOM OPTIONS =====
+CUSTOM_PORT=2222
+ALLOW_PASSWORD_LOGIN=true
 
-echo "🔍 Checking sshd..."
-if ! command -v sshd >/dev/null 2>&1; then
-  echo "⚠️  OpenSSH server not found, installing..."
-  sudo apt update && sudo apt install -y openssh-server
+NEWUSER="americio"
+SSH_PUBLIC_KEY="ssh-ed25519 AAAA...your_key_here"
+PASSWORDLESS_SUDO=false
+
+BANTIME="1h"
+FINDTIME="10m"
+MAXRETRY=3
+### ===========================
+
+FILE=/etc/ssh/sshd_config
+
+echo "💾 Backing up original sshd_config"
+sudo cp "$FILE" "$FILE.backup.$(date +%F-%H%M%S)"
+
+echo "✒️ Writing secure sshd_config..."
+
+sudo tee "$FILE" >/dev/null <<EOF
+# ===== SECURE SSH CONFIG (FRESH VPS) =====
+
+# Port (change from default 22 reduces random bots)
+Port ${CUSTOM_PORT}
+# To disable IPv6 for SSH, uncomment:
+# AddressFamily inet
+
+# Authentication
+PermitRootLogin no
+PasswordAuthentication $( [ "$ALLOW_PASSWORD_LOGIN" = true ] && echo "yes" || echo "no" )
+PermitEmptyPasswords no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+# Security limits
+MaxAuthTries 3
+LoginGraceTime 20
+MaxSessions 2
+
+# Keepalive
+ClientAliveInterval 120
+ClientAliveCountMax 2
+
+# Logging
+LogLevel VERBOSE
+
+# Default "Include" directory
+Include /etc/ssh/sshd_config.d/*.conf
+EOF
+
+echo "🤔 Validating new SSH configuration..."
+if sudo sshd -t; then
+    echo "✅ SSH config OK. Reloading sshd..."
+    sudo systemctl reload sshd
+    echo "👌 SSH hardened successfully."
 else
-  echo "✅ sshd found: $(which sshd)"
+    echo "⛔ SSH config ERROR. Restoring backup..."
+    sudo cp "$FILE.backup"* "$FILE"
+    exit 1
 fi
 
-echo "🧱 Checking for socket-activation mode..."
-if systemctl is-active --quiet ssh.socket; then
-  echo "⚙️  Disabling socket activation (so custom port works)..."
-  sudo systemctl disable --now ssh.socket
-  sudo systemctl enable --now ssh.service
+echo "===================================================================="
+
+echo "🪄 Creating user: $NEWUSER"
+if id "$NEWUSER" >/dev/null 2>&1; then
+    echo "👻 User already exists, skipping."
 else
-  echo "✅ Socket activation not in use or already disabled."
+    sudo adduser --disabled-password --gecos "" "$NEWUSER"
+	GENPASS=$(openssl rand -base64 16)
+	echo "$NEWUSER:$GENPASS" | sudo chpasswd
+	echo "🔐 Temporary password for $NEWUSER: $GENPASS"
 fi
 
-echo "📝 Backing up sshd_config..."
-sudo cp "$SSH_CONFIG" "${SSH_CONFIG}.bak.$(date +%F_%T)"
+echo "🤝 Adding $NEWUSER to sudo group"
+sudo usermod -aG sudo "$NEWUSER"
+sudo usermod -aG adm "$NEWUSER"
+sudo usermod -s /bin/bash "$NEWUSER"
 
-echo "✏️  Updating SSH port and disabling root login..."
-sudo sed -i "s/^#Port .*/Port $NEW_PORT/" "$SSH_CONFIG"
-sudo sed -i "s/^Port .*/Port $NEW_PORT/" "$SSH_CONFIG"
-sudo sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" "$SSH_CONFIG"
-sudo sed -i "s/^PermitRootLogin.*/PermitRootLogin no/" "$SSH_CONFIG"
+echo "🗃️ Setting up SSH directory"
+sudo mkdir -p /home/$NEWUSER/.ssh
+echo "$SSH_PUBLIC_KEY" | sudo tee /home/$NEWUSER/.ssh/authorized_keys >/dev/null
 
-echo "🔍 Validating sshd configuration..."
-sudo sshd -t && echo "✅ sshd configuration OK"
+sudo chmod 700 /home/$NEWUSER/.ssh
+sudo chmod 600 /home/$NEWUSER/.ssh/authorized_keys
+sudo chown -R $NEWUSER:$NEWUSER /home/$NEWUSER/.ssh
 
-echo "🧱 Adjusting firewall rules..."
-sudo ufw allow $NEW_PORT/tcp || true
-sudo ufw allow 22/tcp || true     # keep old port open for safety
-
-echo "🔁 Restarting SSH service..."
-sudo systemctl restart ssh
-
-echo "🔎 Checking new port..."
-if sudo ss -tuln | grep ":$NEW_PORT" >/dev/null; then
-  echo "✅ SSH is now listening on port $NEW_PORT"
-else
-  echo "⚠️  SSH not yet listening on $NEW_PORT — check /etc/ssh/sshd_config"
+if [ "$PASSWORDLESS_SUDO" = true ]; then
+    echo "🔓 Enabling passwordless sudo for $NEWUSER"
+    echo "$NEWUSER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/90-$NEWUSER >/dev/null
+    sudo chmod 440 /etc/sudoers.d/90-$NEWUSER
 fi
 
-SERVER_IP=$(hostname -I | awk '{print $1}')
-echo ""
-echo "🧪 Test new connection in another terminal:"
-echo "    ssh -p $NEW_PORT $(whoami)@$SERVER_IP"
-echo ""
-echo "⚠️  Keep this session open until you confirm new access works!"
-echo ""
+echo "🔒 Locking root password (optional safety)"
+sudo passwd -l root
 
-read -p "Press Enter once you successfully connect via new port..."
+echo "👌 Secure sudo user setup completed."
+echo "Now log in as: ssh $NEWUSER@your-server -p $CUSTOM_PORT"
 
-echo "🚫 Removing old port 22 from firewall..."
-sudo ufw delete allow 22/tcp || true
+echo "===================================================================="
 
-echo "🛡️ Installing Fail2Ban (optional but recommended)..."
+echo "🛡️ Configuring UFW firewall with safe defaults"
+
+sudo ufw --force reset
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+echo "🔓 Allowing SSH port: $CUSTOM_PORT and other common ports (http, https)"
+sudo ufw limit ${CUSTOM_PORT}/tcp
+sudo ufw allow http
+sudo ufw allow https
+
+echo "🚀 Enabling firewall..."
+sudo ufw --force enable
+
+echo "📋 UFW status:"
+sudo ufw status verbose
+
+echo "👌 UFW firewall configuration completed."
+
+echo "===================================================================="
+
+echo "📦 Installing fail2ban..."
+sudo apt update
 sudo apt install -y fail2ban
 
-echo ""
-echo "✅ Done! SSH hardened and running on port $NEW_PORT"
-echo "   • Root login disabled"
-echo "   • Fail2Ban active"
-echo "   • Socket activation off (using ssh.service)"
+JAIL_LOCAL="/etc/fail2ban/jail.local"
+
+echo "📝 Writing fail2ban jail.local..."
+sudo tee $JAIL_LOCAL >/dev/null <<EOF
+[DEFAULT]
+bantime = ${BANTIME}
+findtime = ${FINDTIME}
+maxretry = ${MAXRETRY}
+backend = systemd
+banaction = ufw
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+port = ${CUSTOM_PORT}
+filter = sshd
+backend = systemd
+logpath = journal
+EOF
+
+echo "🔄 Restarting Fail2ban..."
+sudo systemctl restart fail2ban
+
+echo "🔍 Fail2ban SSH jail status:"
+sudo fail2ban-client status sshd
+
+echo "👌 Fail2ban installed & configured."
+
+echo "===================================================================="
+
+echo "📦 Unattended Security Updates (auto-patch for critical CVEs)"
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure -plow unattended-upgrades
+
+if false; then
+	
+	echo "===================================================================="
+	echo "🔐 Enabling SSH 2FA (TOTP via Google Authenticator)"
+
+	echo "📦 Installing TOTP PAM module..."
+	sudo apt install -y libpam-google-authenticator
+
+	echo "🪪 Generating TOTP secret for user: $NEWUSER"
+	sudo -u "$NEWUSER" bash -c "google-authenticator -t -d -f -r 3 -R 30 -W --quiet"
+
+	echo "📁 Backing up SSH PAM config..."
+	sudo cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%F-%H%M%S)
+
+	echo "✒️ Updating PAM rules for TOTP"
+	sudo sed -i '1i auth required pam_google_authenticator.so' /etc/pam.d/sshd
+
+	echo "📁 Backing up sshd_config..."
+	sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak.$(date +%F-%H%M%S)
+
+	echo "⚙️ Configuring SSH to require BOTH publickey & TOTP"
+	sudo sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+	sudo sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+
+	# Require BOTH:
+	# - publickey
+	# - keyboard-interactive (Google Authenticator)
+	if grep -q "^AuthenticationMethods" /etc/ssh/sshd_config; then
+		sudo sed -i 's/^AuthenticationMethods.*/AuthenticationMethods publickey,keyboard-interactive/' /etc/ssh/sshd_config
+	else
+		echo "AuthenticationMethods publickey,keyboard-interactive" | sudo tee -a /etc/ssh/sshd_config >/dev/null
+	fi
+
+	echo "🤔 Validating SSH configuration with 2FA..."
+	if sudo sshd -t; then
+		echo "✅ SSH config OK. Restarting sshd..."
+		sudo systemctl restart sshd
+		echo "🔐 SSH 2FA enabled successfully."
+	else
+		echo "⛔ ERROR: Invalid SSH config. Rolling back..."
+		sudo cp /etc/ssh/sshd_config.bak.* /etc/ssh/sshd_config
+		sudo cp /etc/pam.d/sshd.bak.* /etc/pam.d/sshd
+		sudo systemctl restart sshd
+		exit 1
+	fi
+
+	echo "✨ 2FA Setup Completed."
+	echo "👉 IMPORTANT: Open a NEW terminal and test login before closing this session."
+	echo "SSH Login now requires:"
+	echo "  1) SSH private key"
+	echo "  2) Google Authenticator 6-digit TOTP code"
+	
+	echo "===================================================================="
+	
+	echo "📜 Installing hardened auditd rules..."
+
+	sudo tee /etc/audit/rules.d/hardening.rules >/dev/null << "EOF"
+## ===============================
+## HARDENED AUDITD SECURITY RULES
+## ===============================
+
+# Track all commands executed via sudo
+-w /var/log/sudo.log -p wa -k sudo_logs
+
+# Track changes to privileged binaries (SUID/SGID)
+-w /usr/bin -p wa -k privileged-bins
+-w /usr/sbin -p wa -k privileged-bins
+
+# Track changes to essential system config
+-w /etc/passwd -p wa -k passwd_changes
+-w /etc/group -p wa -k group_changes
+-w /etc/shadow -p wa -k shadow_changes
+-w /etc/sudoers -p wa -k sudoers_changes
+-w /etc/sudoers.d/ -p wa -k sudoers_changes
+
+# Track SSH configuration changes
+-w /etc/ssh/sshd_config -p wa -k ssh_config
+-w /etc/ssh/sshd_config.d/ -p wa -k ssh_config
+
+# Track all login/logout events, including failures
+-w /var/log/faillog -p wa -k auth_failures
+-w /var/log/lastlog -p wa -k auth_changes
+-w /var/log/tallylog -p wa -k auth_failures
+
+# Track modification to systemd service files
+-w /etc/systemd/system/ -p wa -k systemd_changes
+-w /usr/lib/systemd/system/ -p wa -k systemd_changes
+
+# Track kernel module loading/unloading
+-w /sbin/modprobe -p x -k kernel_modules
+-w /usr/sbin/modprobe -p x -k kernel_modules
+
+# Record attempts to become root
+-w /bin/su -p x -k root_escalation
+
+# Monitor unauthorized file permission or attribute changes
+-a always,exit -F arch=b64 -S chmod,chown,chgrp,fchmod,fchown -k perms
+-a always,exit -F arch=b32 -S chmod,chown,chgrp,fchmod,fchown -k perms
+
+# Detect root-level shell spawning (/bin/bash executed by UID 0)
+-a always,exit -F arch=b64 -S execve -F uid=0 -k root_shell
+-a always,exit -F arch=b32 -S execve -F uid=0 -k root_shell
+
+# Detect modifications to firewall rules
+-w /etc/ufw/ -p wa -k ufw_changes
+-w /etc/firewalld/ -p wa -k firewalld_changes
+
+# Track crontab modifications (cron persistence attacks)
+-w /etc/crontab -p wa -k cron_changes
+-w /etc/cron.d/ -p wa -k cron_changes
+-w /etc/cron.daily/ -p wa -k cron_changes
+-w /etc/cron.hourly/ -p wa -k cron_changes
+
+# Ensure audit configuration itself is immutable
+-e 2
+EOF
+	echo "🔄 Reloading audit rules..."
+	sudo augenrules --load
+	sudo systemctl restart auditd
+
+	echo "✅ auditd hardening rules installed!"
+fi
 ```
 
 
