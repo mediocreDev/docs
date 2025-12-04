@@ -361,72 +361,179 @@ fi
 
 
 ```shell almalinux.sh
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-# === CONFIGURABLE SETTINGS ===
-NEW_PORT=1993                 # change if you want a different SSH port
-DISABLE_PASSWORD_AUTH=false   # set to false if you want to keep password login
-DISABLE_ROOT_LOGIN=true       # disable direct root login
-SSHD_CONFIG="/etc/ssh/sshd_config"
+### ===== CUSTOM OPTIONS =====
+CUSTOM_PORT=2222
+ALLOW_PASSWORD_LOGIN=true
 
-echo "📦 Updating system"
-sudo dnf -y update
+NEWUSER="americio"
+SSH_PUBLIC_KEY="ssh-ed25519 AAAA...your_key_here"
+PASSWORDLESS_SUDO=false
 
-echo "📦 Installing firewalld and fail2ban"
-sudo dnf -y install firewalld fail2ban
+BANTIME="1h"
+FINDTIME="10m"
+MAXRETRY=3
+### ===========================
 
-echo "📦 Installing semanage, just in case"
-sudo dnf install policycoreutils-python-utils
+FILE=/etc/ssh/sshd_config
 
-echo "⚡ Enabling firewalld"
-sudo systemctl enable --now firewalld
+echo "💾 Backing up original sshd_config"
+sudo cp "$FILE" "$FILE.backup.$(date +%F-%H%M%S)"
 
-echo "⚙️ Configuring firewall rules"
-sudo firewall-cmd --permanent --add-service=ssh   # keep existing port open for now
-sudo firewall-cmd --permanent --add-port=${NEW_PORT}/tcp
-sudo firewall-cmd --reload
-
-echo "✏️ Editing SSH config - change port"
-sudo sed -i "s/^#Port.*/Port ${NEW_PORT}/" $SSHD_CONFIG
-sudo sed -i "s/^Port .*/Port ${NEW_PORT}/" $SSHD_CONFIG
-
-#echo "✏️ Editing SSH config - disable root login"
-#if [ "$DISABLE_ROOT_LOGIN" = true ]; then
-#    sudo sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
-#    sudo sed -i "s/^PermitRootLogin.*/PermitRootLogin no/" $SSHD_CONFIG
-#fi
-
-#echo "✏️ Editing SSH config - disable authentication via password"
-#if [ "$DISABLE_PASSWORD_AUTH" = true ]; then
-#    sudo sed -i "s/^#PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
-#    sudo sed -i "s/^PasswordAuthentication.*/PasswordAuthentication no/" $SSHD_CONFIG
-#fi
-
-echo "⚙️ Configuring SELinux SSH port permission"
-if [ "$(getenforce)" = "Enforcing" ]; then
-    sudo semanage port -a -t ssh_port_t -p tcp "$NEW_SSH_PORT"
-else
-    echo "SELinux is not Enforcing (it is Disabled or Permissive). No semanage action needed."
-fi
-
-echo "🔄 Restarting SSH"
-sudo systemctl restart sshd
-
-echo "⚙️ Configuring Fail2Ban"
-sudo bash -c 'cat > /etc/fail2ban/jail.local' <<EOF
-[sshd]
-enabled = true
-port = ${NEW_PORT}
-logpath = /var/log/secure
-maxretry = 5
-bantime = 10m
+echo "✒️ Writing secure sshd_config..."
+sudo tee "$FILE" >/dev/null <<EOF
+Port ${CUSTOM_PORT}
+PermitRootLogin no
+PasswordAuthentication $( [ "$ALLOW_PASSWORD_LOGIN" = true ] && echo "yes" || echo "no" )
+PermitEmptyPasswords no
+PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+AuthorizedKeysFile .ssh/authorized_keys
+MaxAuthTries 3
+LoginGraceTime 20
+MaxSessions 2
+ClientAliveInterval 120
+ClientAliveCountMax 2
+LogLevel VERBOSE
+Include /etc/ssh/sshd_config.d/*.conf
 EOF
 
-echo "⚡ Enabling Fail2Ban"
-sudo systemctl enable --now fail2ban
+echo "🤔 Validating SSH configuration..."
+sudo sshd -t
 
-echo "🎯 HARDENING SSH COMPLETED"
-echo "IMPORTANT: Open a new terminal and test logging into SSH on port ${NEW_PORT} before closing this session!"
+echo "🔧 Adjusting SELinux for custom SSH port"
+sudo dnf install -y policycoreutils-python-utils
+sudo semanage port -a -t ssh_port_t -p tcp $CUSTOM_PORT 2>/dev/null || \
+sudo semanage port -m -t ssh_port_t -p tcp $CUSTOM_PORT
+
+echo "🔄 Restarting SSH daemon"
+sudo systemctl restart sshd
+
+echo "=============================================================="
+echo "🧑‍💻 Creating user: $NEWUSER"
+if ! id "$NEWUSER" &>/dev/null; then
+    sudo adduser "$NEWUSER"
+    GENPASS=$(openssl rand -base64 16)
+    echo "$NEWUSER:$GENPASS" | sudo chpasswd
+    echo "Temporary password for $NEWUSER: $GENPASS"
+fi
+
+echo "🔑 Installing SSH key for user"
+sudo mkdir -p /home/$NEWUSER/.ssh
+echo "$SSH_PUBLIC_KEY" | sudo tee /home/$NEWUSER/.ssh/authorized_keys >/dev/null
+sudo chmod 700 /home/$NEWUSER/.ssh
+sudo chmod 600 /home/$NEWUSER/.ssh/authorized_keys
+sudo chown -R $NEWUSER:$NEWUSER /home/$NEWUSER/.ssh
+
+echo "🤝 Adding to wheel group (sudo)"
+sudo usermod -aG wheel $NEWUSER
+
+if [ "$PASSWORDLESS_SUDO" = true ]; then
+    echo "$NEWUSER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$NEWUSER >/dev/null
+fi
+
+echo "=============================================================="
+echo "🔥 Configuring Firewalld"
+sudo systemctl enable --now firewalld
+sudo firewall-cmd --permanent --add-port=${CUSTOM_PORT}/tcp
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+
+echo "=============================================================="
+echo "📦 Installing fail2ban"
+sudo dnf install -y epel-release
+sudo dnf install -y fail2ban
+
+sudo tee /etc/fail2ban/jail.local >/dev/null <<EOF
+[DEFAULT]
+bantime = ${BANTIME}
+findtime = ${FINDTIME}
+maxretry = ${MAXRETRY}
+backend = systemd
+
+[sshd]
+enabled = true
+port = ${CUSTOM_PORT}
+EOF
+
+sudo systemctl enable --now fail2ban
+sudo fail2ban-client status sshd
+
+echo "=============================================================="
+echo "🔄 Enabling automatic security updates"
+sudo dnf install -y dnf-automatic
+sudo systemctl enable --now dnf-automatic.timer
+
+echo "=============================================================="
+echo "📌 TODO: SSH banners / honeypot protection"
+# - Add SSH banner (Banner /etc/issue.net)
+# - Deploy Cowrie honeypot (docker or container)
+# - Optional: fake SSH ports for decoy
+# These are commented for reference and manual review
+
+echo "=============================================================="
+echo "📌 TODO: Disable password login 100%"
+# - To fully enforce publickey-only:
+#   PasswordAuthentication no
+#   ChallengeResponseAuthentication no
+#   Ensure PAM does not allow password fallback
+# - Currently controlled by ALLOW_PASSWORD_LOGIN variable
+# - Keep current session open and test login before enforcing
+
+echo "=============================================================="
+echo "📌 Reference block: Google Authenticator 2FA & auditd hardening"
+if false; then
+    echo "🔐 Installing Google Authenticator for TOTP 2FA"
+    sudo dnf install -y libpam-google-authenticator
+    sudo -u "$NEWUSER" google-authenticator -t -d -f -r 3 -R 30 -W --quiet
+    sudo cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%F-%H%M%S)
+    echo "auth required pam_google_authenticator.so" | sudo tee -a /etc/pam.d/sshd
+    sudo sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+    sudo sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+    if grep -q "^AuthenticationMethods" /etc/ssh/sshd_config; then
+        sudo sed -i 's/^AuthenticationMethods.*/AuthenticationMethods publickey,keyboard-interactive/' /etc/ssh/sshd_config
+    else
+        echo "AuthenticationMethods publickey,keyboard-interactive" | sudo tee -a /etc/ssh/sshd_config >/dev/null
+    fi
+    sudo sshd -t
+    sudo systemctl restart sshd
+    echo "✅ Google Authenticator 2FA enabled (reference)"
+    
+    echo "📦 Installing and hardening auditd"
+    sudo dnf install -y audit
+    sudo tee /etc/audit/rules.d/hardening.rules >/dev/null << 'EOF'
+# track sudo/sudoers
+-w /var/log/sudo.log -p wa -k sudo_logs
+-w /etc/sudoers -p wa -k sudoers_changes
+-w /etc/sudoers.d/ -p wa -k sudoers_changes
+# track SSH config
+-w /etc/ssh/sshd_config -p wa -k ssh_config
+-w /etc/ssh/sshd_config.d/ -p wa -k ssh_config
+# privileged binaries
+-w /usr/bin -p wa -k privileged-bins
+-w /usr/sbin -p wa -k privileged-bins
+# login/logout
+-w /var/log/faillog -p wa -k auth_failures
+-w /var/log/lastlog -p wa -k auth_changes
+# kernel module loads
+-w /sbin/modprobe -p x -k kernel_modules
+# detect root shell spawn
+-a always,exit -F arch=b64 -S execve -F uid=0 -k root_shell
+# make audit config immutable
+-e 2
+EOF
+    sudo augenrules --load
+    sudo systemctl restart auditd
+    echo "✅ auditd hardening installed (reference)"
+fi
+
+echo "=============================================================="
+echo "✨ AlmaLinux SSH hardening script completed (reference-ready)"
+echo "Login using: ssh $NEWUSER@server -p $CUSTOM_PORT"
+echo "Keep your existing SSH session open while testing."
 ```
 
 </CodeGroup>
