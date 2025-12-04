@@ -223,10 +223,12 @@ backend = systemd
 logpath = journal
 EOF
 
-
 echo "🔄 Restarting Fail2ban..."
+sudo systemctl enable --now fail2ban
+sudo systemctl status fail2ban
+sudo fail2ban-client status sshd
 sudo systemctl restart fail2ban
-
+sleep 2
 echo "🔍 Fail2ban SSH jail status:"
 sudo fail2ban-client status sshd
 
@@ -464,7 +466,13 @@ enabled = true
 port = ${CUSTOM_PORT}
 EOF
 
+echo "🔄 Restarting Fail2ban..."
 sudo systemctl enable --now fail2ban
+sudo systemctl status fail2ban
+sudo fail2ban-client status sshd
+sudo systemctl restart fail2ban
+sleep 2
+echo "🔍 Fail2ban SSH jail status:"
 sudo fail2ban-client status sshd
 
 echo "=============================================================="
