@@ -1,9 +1,9 @@
 ---
-title: 'Shell over the web'
-description: 'Multiple ways to access shell via browser.'
+title: "Shell over the web"
+description: "Multiple ways to access shell via browser."
 ---
 
-### `ttyd`
+# `ttyd`
 
 > 🗎 Refs: [Github Repo](https://github.com/tsl0922/ttyd)
 
@@ -12,3 +12,176 @@ description: 'Multiple ways to access shell via browser.'
 ```shell
 sudo ttyd -s SIGKILL -p 7593 -W bash -x
 ```
+
+## `ttyd` + Cloudflare Zero Trust + Cloudflare Tunnel
+
+### Create dedicated user
+
+```shell
+sudo adduser --gecos "" ttyd
+sudo usermod -aG sudo ttyd
+```
+
+### Install
+
+```shell
+sudo apt update
+sudo apt install -y ttyd tmux zsh git curl wget
+sudo chsh -s /usr/bin/zsh ttyd
+```
+
+### Create per-connection `tmux` wrapper
+
+```shell /home/ttyd/start-tmux.sh
+#!/usr/bin/env bash
+SESSION="web-$(date +%s-%N)"
+cd /home/ttyd
+exec tmux new-session -A -s "$SESSION" zsh
+```
+
+```shell
+sudo chmod +x /home/ttyd/start-tmux.sh
+```
+
+### Add tmux auto-cleanup
+
+```shell /home/ttyd/.tmux.conf
+set -g destroy-unattached on
+set -g detach-on-destroy on
+```
+
+- Restart
+
+```shell
+sudo systemctl restart ttyd
+```
+
+### Create `systemd` service
+
+```shell /etc/systemd/system/ttyd.service
+[Unit]
+Description=ttyd - SSH Web Terminal
+After=network.target
+
+[Service]
+User=ttyd
+Group=ttyd
+Environment=HOME=/home/ttyd
+WorkingDirectory=/home/ttyd
+ExecStart=/usr/bin/ttyd -t titleFixed="HostDzire-4-6-100" --port 7529 --writable --check-origin=false \
+    /home/ttyd/start-tmux.sh
+Restart=always
+RestartSec=3
+
+# Security hardening, consider yourself
+ProtectHome=read-only
+ProtectSystem=full
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- Apply:
+
+```shell
+sudo systemctl daemon-reload
+sudo systemctl enable --now ttyd
+```
+
+- Check:
+
+```shell
+sudo systemctl status ttyd
+```
+
+### Install Cloudflare Tunnel
+
+- Install:
+
+```shell
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared-linux-amd64.deb
+```
+
+- Login:
+
+```shell
+sudo cloudflared tunnel login
+```
+
+- Create tunnel
+
+```
+sudo cloudflared tunnel create ttyd-tunnel
+sudo mkdir -p /etc/cloudflared
+sudo cp /root/.cloudflared/*.json /etc/cloudflared/
+sudo chown root:root /etc/cloudflared/*.json
+```
+
+- Check `cloudflared` location & tunnel ID
+
+```shell
+which cloudflared
+cloudflared tunnel list
+```
+
+- Config:
+
+```shell /etc/cloudflared/config.yml
+tunnel: TUNNEL_ID
+credentials-file: /etc/cloudflared/TUNNEL_ID.json
+
+ingress:
+  - hostname: your-subdomain.example.com
+    service: http://localhost:7529
+  - service: http_status:404
+```
+
+- Install Cloudflare’s official systemd service and enable:
+
+```shell
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared
+```
+
+- Config DNS: Check Cloudflare's `DNS` page -> `CNAME` rule with the target is TUNNEL_ID.cfargotunnel.com
+
+### Setup Zero Trust
+
+#### Create policy
+
+- `Access controls` -> `Policies` -> `Add a policy`
+
+- Input `Policy name`, `Action` as `Allow`, `Session Duration` as `Same as...`
+
+- Add rules Include with `Selector` is `Emails` and input whitelisted emails
+
+- Save policy
+
+#### Create App Launcher
+
+- `Access controls` -> `Access settings` -> `Manage your App Launcher`
+
+- Tab `Policies` -> `Select existing policies` -> Choose the created policy
+
+- Tab `Login methods` -> Enable PIN
+
+- Save App Launcher
+
+#### Create App Launcher
+
+- `Access controls` -> `Applications` -> `Add an application`
+
+- Choose `Self-hosted`, enter `Application name`, `Session Duration`
+
+- `Add public hostname`, input subdomain configured before
+
+- `Access policies` -> `Select existing policies` -> Choose the policy created before
+
+- `Login methods` -> `Accept all...`
+
+#### Add Google Auth
+
+- `Integrations` -> `Identity providers` -> `Add an identity provider`
