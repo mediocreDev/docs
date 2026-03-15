@@ -3,6 +3,105 @@ title: "ssh"
 description: "SSH personal notes."
 ---
 
+#### 🛡️ SSH Protection Layers — Basic to Advanced
+
+##### Layer 1 — Immediate Basics (Do These First) - `sshd_config`
+
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `Port XXXX` |
+| 2 | Disable root login | `PermitRootLogin no` |
+| 3 | Limit max auth tries | `MaxAuthTries 3` |
+| 4 | Reduce login grace | `LoginGraceTime 30` |
+| 5 | Restrict to specific user | `AllowUsers <<yourusername>>` |
+
+
+##### Layer 2 — Key-Based Auth (Eliminates Brute Force)
+
+6Generate ed25519 keypairssh-keygen -t ed255197Copy key to serverssh-copy-id8Disable password authPasswordAuthentication no9Disable empty passwordsPermitEmptyPasswords no
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+
+##### Layer 3 — Firewall (UFW)
+ActionCommand10Default deny all incomingufw default deny incoming11Allow only your SSH portufw allow YOUR_PORT/tcp12Whitelist your IP for SSHufw allow from YOUR_IP to any port YOUR_PORT13Enable UFWufw enable
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+
+##### Layer 4 — Auto-Blocking (fail2ban)
+ActionConfig14Install fail2banapt install fail2ban15Configure [sshd] jailmaxretry=5, bantime=1h16Recidive jail (repeat offenders)bantime=-1 permanent ban17Email alerts on bansaction = %(action_mwl)s
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+
+##### Layer 5 — Log Monitoring (Visibility)
+`ActionCommand18Check failed loginsgrep "Failed password" /var/log/auth.log19Find top attacker IPsawk '{print $11}' | sort | uniq -c | sort -rn20Verify successful loginsgrep "Accepted" /var/log/auth.log21Watch live auth logtail -f /var/log/auth.log`
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+
+##### Layer 6 — Advanced Hardening
+ActionTool/File22Fix Docker bypassing UFWdaemon.json → "iptables": false23Bind services to localhostdocker-compose.yml → 127.0.0.1:PORT24Block Postgres publiclyufw deny 543225Nginx attack detectioncustom fail2ban filter + jail26Block bot/scanner probesbotsearch-common fail2ban jail
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+
+##### Layer 7 — Expert Level
+ActionTool27Two-factor auth for SSHlibpam-google-authenticator28Port knockingknockd29Geo-blocking by countrygeoip-shell or nftables30Intrusion detection systemOSSEC or Wazuh31Centralized log monitoringGrafana + Loki + Promtail
+| No. | Action | Command/File |
+|---|---|---|
+| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+| 1 | 2 | 3 |
+
+
 #### SSH via private keys
 
 ```shell
