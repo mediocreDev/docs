@@ -3,104 +3,57 @@ title: "ssh"
 description: "SSH personal notes."
 ---
 
-#### 🛡️ SSH Protection Layers — Basic to Advanced
+#### SSH checklist
 
-##### Layer 1 — Immediate Basics (Do These First) - `sshd_config`
+```shell
+# What port is SSH listening on?
+sudo ss -tlnp | grep sshd
 
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `Port XXXX` |
-| 2 | Disable root login | `PermitRootLogin no` |
-| 3 | Limit max auth tries | `MaxAuthTries 3` |
-| 4 | Reduce login grace | `LoginGraceTime 30` |
-| 5 | Restrict to specific user | `AllowUsers <<yourusername>>` |
+# Review critical sshd config settings
+grep -E "^(Port|PermitRootLogin|PasswordAuthentication|MaxAuthTries|AllowUsers)" /etc/ssh/sshd_config
 
+# Quick count of failed attempts
+sudo grep "Failed password" /var/log/auth.log | wc -l
 
-##### Layer 2 — Key-Based Auth (Eliminates Brute Force)
+# Top offending IPs
+sudo grep "Failed password" /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -20
 
-6Generate ed25519 keypairssh-keygen -t ed255197Copy key to serverssh-copy-id8Disable password authPasswordAuthentication no9Disable empty passwordsPermitEmptyPasswords no
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
+# Recent 50 failures with timestamp
+sudo grep "Failed password" /var/log/auth.log | tail -50
 
-##### Layer 3 — Firewall (UFW)
-ActionCommand10Default deny all incomingufw default deny incoming11Allow only your SSH portufw allow YOUR_PORT/tcp12Whitelist your IP for SSHufw allow from YOUR_IP to any port YOUR_PORT13Enable UFWufw enable
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
+# Who is currently logged in
+who
 
-##### Layer 4 — Auto-Blocking (fail2ban)
-ActionConfig14Install fail2banapt install fail2ban15Configure [sshd] jailmaxretry=5, bantime=1h16Recidive jail (repeat offenders)bantime=-1 permanent ban17Email alerts on bansaction = %(action_mwl)s
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
+# More detail: IP, login time, idle
+w
 
-##### Layer 5 — Log Monitoring (Visibility)
-`ActionCommand18Check failed loginsgrep "Failed password" /var/log/auth.log19Find top attacker IPsawk '{print $11}' | sort | uniq -c | sort -rn20Verify successful loginsgrep "Accepted" /var/log/auth.log21Watch live auth logtail -f /var/log/auth.log`
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
+# All active SSH connections via socket
+ss -tnp | grep :22
 
-##### Layer 6 — Advanced Hardening
-ActionTool/File22Fix Docker bypassing UFWdaemon.json → "iptables": false23Bind services to localhostdocker-compose.yml → 127.0.0.1:PORT24Block Postgres publiclyufw deny 543225Nginx attack detectioncustom fail2ban filter + jail26Block bot/scanner probesbotsearch-common fail2ban jail
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
+# SSH login history (recent)
+last | grep "pts\|ssh" | head -20
 
-##### Layer 7 — Expert Level
-ActionTool27Two-factor auth for SSHlibpam-google-authenticator28Port knockingknockd29Geo-blocking by countrygeoip-shell or nftables30Intrusion detection systemOSSEC or Wazuh31Centralized log monitoringGrafana + Loki + Promtail
-| No. | Action | Command/File |
-|---|---|---|
-| 1 | Change default SSH port | `sshd_config` → `Port XXXX` |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
-| 1 | 2 | 3 |
+# Check if installed
+fail2ban-client status 2>/dev/null || echo "fail2ban NOT installed"
 
+# Install it
+sudo apt install fail2ban -y
+
+# After install — check SSH jail status
+sudo fail2ban-client status sshd
+
+# List currently banned IPs
+sudo fail2ban-client get sshd banip
+```
+
+⚡ One-liner Full Snapshot
+
+```shell
+echo "=== SSH PORT ===" && ss -tlnp | grep sshd && \
+echo "=== FAILED LOGINS (top IPs) ===" && grep "Failed password" /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -10 && \
+echo "=== ACTIVE SESSIONS ===" && w && \
+echo "=== FAIL2BAN ===" && sudo fail2ban-client status sshd 2>/dev/null || echo "fail2ban not running"
+```
 
 #### SSH via private keys
 
@@ -164,7 +117,7 @@ sudo systemctl restart ssh
 systemctl restart sshd
 ```
 
-- Allow port via [[ufw]]/[firewalld]
+- Allow port via \[\[ufw\]\]/\[firewalld\]
 - Apply fail2ban
 
 #### Setup script:
@@ -465,7 +418,6 @@ fi
 echo "💯 Finished initial VPS Setup! Goodbye!"
 ```
 
-
 ```shell almalinux.sh
 #!/usr/bin/env bash
 set -e
@@ -659,3 +611,71 @@ sudo ./harden.sh
 # One-liner, no download
 curl -sSL https://gist.githubusercontent.com/username/abcdef1234567890/raw/harden.sh | sudo bash
 ```
+
+#### 🛡️ SSH Protection Layers — Basic to Advanced
+
+##### Layer 1 — Immediate Basics (Do These First) - `sshd_config`
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 1 | Change default SSH port | `Port XXXX` |
+| 2 | Disable root login | `PermitRootLogin no` |
+| 3 | Limit max auth tries | `MaxAuthTries 3` |
+| 4 | Reduce login grace | `LoginGraceTime 30` |
+| 5 | Restrict to specific user | `AllowUsers <<yourusername>>` |
+
+##### Layer 2 — Key-Based Auth (Eliminates Brute Force)
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 6 | Generate ed25519 keypair | `ssh-keygen -t ed25519` |
+| 7 | Copy key to server | ssh-copy-id |
+| 8 | Disable password auth | `PasswordAuthentication no` |
+| 9 | Disable empty passwords | `PermitEmptyPasswords no` |
+
+##### Layer 3 — Firewall (UFW)
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 10 | Default deny all incoming | `ufw default deny incoming` |
+| 11 | Allow only your SSH port | `ufw allow [YOUR_PORT]/tcp` |
+| 12 | Whitelist your IP for SSH | `ufw allow from [YOUR_IP] to any port [YOUR_PORT]` |
+| 13 | Enable UFW | `ufw enable` |
+
+##### Layer 4 — Auto-Blocking (fail2ban)
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 14 | Install fail2ban | `sudo apt install fail2ban` |
+| 15 | Configure \[sshd\] | `jailmaxretry=5, bantime=1h` |
+| 16 | Recidive jail (repeat offenders) | `bantime=-1 permanent ban` |
+| 17 | Email alerts on bans | `action = %(action_mwl)` |
+
+##### Layer 5 — Log Monitoring (Visibility)
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 18 | Check failed logins | `grep "Failed password" /var/log/auth.log` |
+| 19 | Find top attacker IPs | `awk '{print $11}' \| sort \| uniq -c \| sort -rn` |
+| 20 | Verify successful logins | grep "Accepted" /var/log/auth.log |
+| 21 | Watch live auth log | `tail -f /var/log/auth.log` |
+
+##### Layer 6 — Advanced Hardening
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 22 | Fix Docker bypassing UFW | `daemon.json → "iptables": false` |
+| 23 | Bind services to localhost | `docker-compose.yml → 127.0.0.1:PORT` |
+| 24 | Block Postgres publicly | ufw deny 5432 |
+| 25 | Nginx attack detection custom | `fail2ban filter jail` |
+| 26 | Block bot scanner | `probesbotsearch-common`, `fail2ban jail` |
+
+##### Layer 7 — Expert Level
+
+| No. | Action | Command/File |
+| --- | --- | --- |
+| 27 | Two-factor auth for SSH | libpam-google-authenticator |
+| 28 | Port knocking | knockd |
+| 29 | Geo-blocking by country | `geoip-shell` or `nftables` |
+| 30 | Intrusion detection system | OSSEC or Wazuh |
+| 31 | Centralized log monitoring | Grafana \+ Loki \+ Promtail |
