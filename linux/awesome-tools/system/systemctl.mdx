@@ -1,7 +1,172 @@
 ---
 title: "systemctl"
-description: "Manage the systemd."
+description: "`systemctl` Cheat Sheet — Ubuntu/Debian Developer Reference"
 ---
->🗎 Refs:
-><br/>https://www.howtogeek.com/these-12-systemctl-commands-will-let-you-take-control-of-linux-systemd-services/
-><br/>Kjoulnald
+
+## 1. Managing & Listing Services
+
+```bash
+# Check status of a service
+systemctl status nginx
+systemctl status postgresql
+
+# Start / Stop / Restart
+sudo systemctl start nginx
+sudo systemctl stop nginx
+sudo systemctl restart nginx
+
+# Reload config WITHOUT downtime (if the service supports it)
+sudo systemctl reload nginx
+
+# Restart only if the service is already running
+sudo systemctl try-restart nginx
+```
+
+> 💡 Use `reload` over `restart` for nginx/postgres in production — it avoids dropping connections.
+
+```bash
+# List ALL services (all states)
+systemctl list-units --type=service
+
+# List only RUNNING services
+systemctl list-units --type=service --state=running
+
+# List only FAILED services
+systemctl list-units --type=service --state=failed
+
+# List ENABLED services (start on boot)
+systemctl list-unit-files --type=service --state=enabled
+
+# Suppress the pager (useful for scripting / piping)
+systemctl list-units --type=service --no-pager
+
+# Filter by keyword (e.g. find anything docker-related)
+systemctl list-units --type=service | grep docker
+
+# Group filter using glob pattern (e.g. all snap services)
+systemctl list-units 'snap.*' --type=service
+
+# Show only the service name column (clean output)
+systemctl list-units --type=service --no-legend | awk '{print $1}'
+```
+
+> 💡 **Reading the output columns:**
+> | Column | Meaning |
+> |---|---|
+> | `UNIT` | Service name (e.g. `nginx.service`) |
+> | `LOAD` | Whether systemd parsed the unit file |
+> | `ACTIVE` | High-level state: `active`, `inactive`, `failed` |
+> | `SUB` | Low-level state: `running`, `exited`, `dead` |
+> | `DESCRIPTION` | Human-readable label |
+
+---
+
+## 2. Debugging & Logs
+
+```bash
+# View logs for a specific service
+journalctl -u nginx
+
+# Follow live logs (like tail -f)
+journalctl -u nginx -f
+
+# Show logs since last boot only
+journalctl -u nginx -b
+
+# Show last 50 lines
+journalctl -u nginx -n 50
+
+# Show logs within a time range
+journalctl -u nginx --since "2024-01-01" --until "2024-01-02"
+
+# Check why a service failed
+systemctl status nginx
+journalctl -xe   # Full system log with explanations
+```
+
+---
+
+## 3. Boot & Startup Behavior
+
+```bash
+# Enable a service to start automatically on boot
+sudo systemctl enable nginx
+
+# Disable autostart on boot
+sudo systemctl disable nginx
+
+# Check if a service is enabled
+systemctl is-enabled nginx
+
+# Check if a service is currently running
+systemctl is-active nginx
+
+# See ALL running services
+systemctl list-units --type=service --state=running
+
+# See FAILED services (great for debugging boot issues)
+systemctl list-units --type=service --state=failed
+
+# Reboot / shutdown via systemctl
+sudo systemctl reboot
+sudo systemctl poweroff
+```
+
+---
+
+## 4. Writing a Custom `.service` File
+
+**Step 1 — Create the file:**
+```bash
+sudo nano /etc/systemd/system/myapp.service
+```
+
+**Step 2 — Paste this template:**
+```ini
+[Unit]
+Description=My Node.js App
+After=network.target          # Start after network is ready
+
+[Service]
+Type=simple
+User=ubuntu                   # Run as this user (not root!)
+WorkingDirectory=/home/ubuntu/myapp
+ExecStart=/usr/bin/node server.js
+Restart=on-failure            # Auto-restart if it crashes
+RestartSec=5                  # Wait 5s before restarting
+Environment=NODE_ENV=production
+StandardOutput=journal        # Logs go to journalctl
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target    # Start at normal boot
+```
+
+**Step 3 — Activate it:**
+```bash
+sudo systemctl daemon-reload   # Tell systemd about the new file
+sudo systemctl enable myapp
+sudo systemctl start myapp
+
+# Verify
+systemctl status myapp
+journalctl -u myapp -f
+```
+
+---
+
+## Quick Reference Summary
+
+| Task | Command |
+|---|---|
+| Check service status | `systemctl status <name>` |
+| Start service | `sudo systemctl start <name>` |
+| Stop service | `sudo systemctl stop <name>` |
+| Restart service | `sudo systemctl restart <name>` |
+| Enable on boot | `sudo systemctl enable <name>` |
+| Disable on boot | `sudo systemctl disable <name>` |
+| View logs live | `journalctl -u <name> -f` |
+| Reload after `.service` edit | `sudo systemctl daemon-reload` |
+| List running services | `systemctl list-units --type=service --state=running` |
+| List failed services | `systemctl list-units --state=failed` |
+| Filter services by name | `systemctl list-units --type=service \| grep <keyword>` |
