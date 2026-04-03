@@ -9,6 +9,20 @@
   },
   "favicon": "_assets/favicon.svg",
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Mintlify Docs",
+          "icon": "book-open-cover",
+          "href": "https://mintlify.com/docs"
+        },
+        {
+          "anchor": "InoReader",
+          "icon": "newspaper",
+          "href": "https://www.inoreader.com/all_articles"
+        }
+      ]
+    },
     "tabs": [
       {
         "tab": "Langs",
@@ -126,22 +140,16 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Mind Blown",
+        "icon": "alien",
+        "pages": [
+          "mind-blown/table-of-contents",
+          "mind-blown/kich-ban-reset-viet-nam-theo-vung-2025-2030"
+        ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Mintlify Docs",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "InoReader",
-          "href": "https://www.inoreader.com/all_articles",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "_assets/logo/light.svg",
