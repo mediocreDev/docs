@@ -49,6 +49,7 @@ sudo fail2ban-client get sshd banip
 ⚡ One-liner Full Snapshot
 
 ```shell
+# refs: https://gist.github.com/OliverKain/e784e9754d47ccafc3be1d8061e6f1ba
 echo "=== SSH PORT ===" && ss -tlnp | grep sshd && \
 echo "=== FAILED LOGINS (top IPs) ===" && grep "Failed password" /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -10 && \
 echo "=== ACTIVE SESSIONS ===" && w && \
