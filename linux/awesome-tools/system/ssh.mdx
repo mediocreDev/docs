@@ -121,7 +121,7 @@ systemctl restart sshd
 - Allow port via \[\[ufw\]\]/\[firewalld\]
 - Apply fail2ban
 
-#### Setup script:
+#### Quick setup script
 
 <CodeGroup>
 
@@ -443,9 +443,10 @@ echo "💯 Full VPS hardening complete (basic + advanced). Goodbye!"
 #!/usr/bin/env bash
 set -e
 
-### ===== CUSTOM OPTIONS =====
-CUSTOM_PORT=2222
+### ===== BASIC OPTIONS (always run) =====
+CUSTOM_PORT=1993
 ALLOW_PASSWORD_LOGIN=true
+ALLOW_ROOT_LOGIN=true        # set to false to block root SSH login
 
 NEWUSER="americio"
 SSH_PUBLIC_KEY="ssh-ed25519 AAAA...your_key_here"
@@ -454,169 +455,320 @@ PASSWORDLESS_SUDO=false
 BANTIME="1h"
 FINDTIME="10m"
 MAXRETRY=3
-### ===========================
+
+### ===== ADVANCED OPTIONS (only run if ADVANCED_SETUP=true) =====
+# Gates: 2FA (Google Authenticator TOTP), auditd hardening rules, dnf-automatic
+ADVANCED_SETUP=false
+### ========================================================
+
+# ─── helpers ──────────────────────────────────────────────────────────────────
+section() { echo; echo "===================================================================="; echo "  $*"; echo "===================================================================="; }
+info()    { echo "  ℹ️  $*"; }
+ok()      { echo "  ✅ $*"; }
+warn()    { echo "  ⚠️  $*"; }
+
+restart_service() {
+    local svc="$1"
+    echo "🔄 Restarting $svc..."
+    if sudo systemctl restart "$svc"; then
+        sleep 1
+        if sudo systemctl is-active --quiet "$svc"; then
+            ok "$svc is running."
+        else
+            warn "$svc failed to start — check: journalctl -u $svc -n 30"
+            exit 1
+        fi
+    else
+        warn "systemctl restart $svc failed."
+        exit 1
+    fi
+}
+
+# ─── 1. SSH HARDENING (always) ────────────────────────────────────────────────
+section "SSH HARDENING"
 
 FILE=/etc/ssh/sshd_config
 
 echo "💾 Backing up original sshd_config"
 sudo cp "$FILE" "$FILE.backup.$(date +%F-%H%M%S)"
 
-echo "✒️ Writing secure sshd_config..."
+echo "✒️  Writing secure sshd_config..."
 sudo tee "$FILE" >/dev/null <<EOF
+# ===== SECURE SSH CONFIG =====
+
 Port ${CUSTOM_PORT}
-PermitRootLogin no
+# Uncomment to disable IPv6: AddressFamily inet
+
+PermitRootLogin $( [ "$ALLOW_ROOT_LOGIN" = true ] && echo "yes" || echo "no" )
 PasswordAuthentication $( [ "$ALLOW_PASSWORD_LOGIN" = true ] && echo "yes" || echo "no" )
 PermitEmptyPasswords no
-PubkeyAuthentication yes
 KbdInteractiveAuthentication no
+PubkeyAuthentication yes
 AuthorizedKeysFile .ssh/authorized_keys
+
 MaxAuthTries 3
 LoginGraceTime 20
 MaxSessions 2
+
 ClientAliveInterval 120
 ClientAliveCountMax 2
+
 LogLevel VERBOSE
+
 Include /etc/ssh/sshd_config.d/*.conf
 EOF
 
 echo "🤔 Validating SSH configuration..."
-sudo sshd -t
-
-echo "🔧 Adjusting SELinux for custom SSH port"
-sudo dnf install -y policycoreutils-python-utils
-sudo semanage port -a -t ssh_port_t -p tcp $CUSTOM_PORT 2>/dev/null || \
-sudo semanage port -m -t ssh_port_t -p tcp $CUSTOM_PORT
-
-echo "🔄 Restarting SSH daemon"
-sudo systemctl restart sshd
-
-echo "=============================================================="
-echo "🧑‍💻 Creating user: $NEWUSER"
-if ! id "$NEWUSER" &>/dev/null; then
-    sudo adduser "$NEWUSER"
-    GENPASS=$(openssl rand -base64 16)
-    echo "$NEWUSER:$GENPASS" | sudo chpasswd
-    echo "Temporary password for $NEWUSER: $GENPASS"
+# AlmaLinux uses sshd.service
+SSH_SERVICE="sshd.service"
+if sudo sshd -t; then
+    restart_service "$SSH_SERVICE"
+    ok "SSH hardened successfully."
+else
+    warn "SSH config ERROR — restoring backup..."
+    sudo cp "$FILE.backup"* "$FILE"
+    exit 1
 fi
 
-echo "🔑 Installing SSH key for user"
+# ─── 2. USER SETUP (always) ───────────────────────────────────────────────────
+section "USER SETUP"
+
+echo "🪄 Creating user: $NEWUSER"
+if id "$NEWUSER" >/dev/null 2>&1; then
+    info "User already exists, skipping creation."
+else
+    # Mirrors Ubuntu `adduser --disabled-password --gecos ""`
+    sudo useradd -m -s /bin/bash "$NEWUSER"
+    sudo passwd -l "$NEWUSER"                    # lock password (no login via password)
+    GENPASS=$(openssl rand -base64 16)
+    echo "$NEWUSER:$GENPASS" | sudo chpasswd     # set a temp password (unlocks the account)
+    echo "🔐 Temporary password for $NEWUSER: $GENPASS"
+fi
+
+# AlmaLinux: sudo group is `wheel`, adm group exists too
+sudo usermod -aG wheel "$NEWUSER"
+sudo usermod -aG adm   "$NEWUSER"
+sudo usermod -s /bin/bash "$NEWUSER"
+
+echo "🗃️  Setting up SSH directory"
 sudo mkdir -p /home/$NEWUSER/.ssh
 echo "$SSH_PUBLIC_KEY" | sudo tee /home/$NEWUSER/.ssh/authorized_keys >/dev/null
-sudo chmod 700 /home/$NEWUSER/.ssh
-sudo chmod 600 /home/$NEWUSER/.ssh/authorized_keys
-sudo chown -R $NEWUSER:$NEWUSER /home/$NEWUSER/.ssh
-
-echo "🤝 Adding to wheel group (sudo)"
-sudo usermod -aG wheel $NEWUSER
+sudo chmod 700  /home/$NEWUSER/.ssh
+sudo chmod 600  /home/$NEWUSER/.ssh/authorized_keys
+sudo chown -R "$NEWUSER:$NEWUSER" /home/$NEWUSER/.ssh
 
 if [ "$PASSWORDLESS_SUDO" = true ]; then
-    echo "$NEWUSER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$NEWUSER >/dev/null
+    echo "🔓 Enabling passwordless sudo for $NEWUSER"
+    echo "$NEWUSER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/90-"$NEWUSER" >/dev/null
+    sudo chmod 440 /etc/sudoers.d/90-"$NEWUSER"
 fi
 
-echo "=============================================================="
-echo "🔥 Configuring Firewalld"
+ok "User setup completed."
+
+# ─── 3. FIREWALLD (always) ────────────────────────────────────────────────────
+section "FIREWALLD"
+
+# firewalld is installed by default on AlmaLinux; ensure it's running
 sudo systemctl enable --now firewalld
-sudo firewall-cmd --permanent --add-port=${CUSTOM_PORT}/tcp
+
+echo "🔧 Registering custom SSH port with SELinux"
+sudo dnf install -y policycoreutils-python-utils
+sudo semanage port -a -t ssh_port_t -p tcp "$CUSTOM_PORT" 2>/dev/null || \
+sudo semanage port -m -t ssh_port_t -p tcp "$CUSTOM_PORT"
+
+echo "🛡️  Applying firewall rules..."
+sudo firewall-cmd --permanent --add-port="${CUSTOM_PORT}"/tcp
 sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
-sudo firewall-cmd --reload
 
-echo "=============================================================="
-echo "📦 Installing fail2ban"
+# Remove default SSH port (22) if custom port differs
+if [ "$CUSTOM_PORT" != "22" ]; then
+    sudo firewall-cmd --permanent --remove-service=ssh 2>/dev/null || true
+fi
+
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
+ok "firewalld configured."
+
+# ─── 4. FAIL2BAN (always) ─────────────────────────────────────────────────────
+section "FAIL2BAN"
+
+# AlmaLinux: fail2ban lives in EPEL
 sudo dnf install -y epel-release
 sudo dnf install -y fail2ban
 
 sudo tee /etc/fail2ban/jail.local >/dev/null <<EOF
 [DEFAULT]
-bantime = ${BANTIME}
+bantime  = ${BANTIME}
 findtime = ${FINDTIME}
 maxretry = ${MAXRETRY}
-backend = systemd
+backend  = systemd
+banaction = firewallcmd-ipset
+ignoreip = 127.0.0.1/8 ::1
 
 [sshd]
 enabled = true
-port = ${CUSTOM_PORT}
+port    = ${CUSTOM_PORT}
+filter  = sshd
+backend = systemd
+logpath = journal
 EOF
 
-echo "🔄 Restarting Fail2ban..."
 sudo systemctl enable --now fail2ban
-sudo systemctl status fail2ban
-sudo fail2ban-client status sshd
-sudo systemctl restart fail2ban
+restart_service fail2ban
 sleep 2
-echo "🔍 Fail2ban SSH jail status:"
 sudo fail2ban-client status sshd
+ok "Fail2ban installed & configured."
 
-echo "=============================================================="
-echo "🔄 Enabling automatic security updates"
-sudo dnf install -y dnf-automatic
-sudo systemctl enable --now dnf-automatic.timer
-
-echo "=============================================================="
-echo "📌 TODO: SSH banners / honeypot protection"
-# - Add SSH banner (Banner /etc/issue.net)
-# - Deploy Cowrie honeypot (docker or container)
-# - Optional: fake SSH ports for decoy
-# These are commented for reference and manual review
-
-echo "=============================================================="
-echo "📌 TODO: Disable password login 100%"
-# - To fully enforce publickey-only:
-#   PasswordAuthentication no
-#   ChallengeResponseAuthentication no
-#   Ensure PAM does not allow password fallback
-# - Currently controlled by ALLOW_PASSWORD_LOGIN variable
-# - Keep current session open and test login before enforcing
-
-echo "=============================================================="
-echo "📌 Reference block: Google Authenticator 2FA & auditd hardening"
-if false; then
-    echo "🔐 Installing Google Authenticator for TOTP 2FA"
-    sudo dnf install -y libpam-google-authenticator
-    sudo -u "$NEWUSER" google-authenticator -t -d -f -r 3 -R 30 -W --quiet
-    sudo cp /etc/pam.d/sshd /etc/pam.d/sshd.bak.$(date +%F-%H%M%S)
-    echo "auth required pam_google_authenticator.so" | sudo tee -a /etc/pam.d/sshd
-    sudo sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
-    sudo sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
-    if grep -q "^AuthenticationMethods" /etc/ssh/sshd_config; then
-        sudo sed -i 's/^AuthenticationMethods.*/AuthenticationMethods publickey,keyboard-interactive/' /etc/ssh/sshd_config
-    else
-        echo "AuthenticationMethods publickey,keyboard-interactive" | sudo tee -a /etc/ssh/sshd_config >/dev/null
-    fi
-    sudo sshd -t
-    sudo systemctl restart sshd
-    echo "✅ Google Authenticator 2FA enabled (reference)"
-    
-    echo "📦 Installing and hardening auditd"
-    sudo dnf install -y audit
-    sudo tee /etc/audit/rules.d/hardening.rules >/dev/null << 'EOF'
-# track sudo/sudoers
--w /var/log/sudo.log -p wa -k sudo_logs
--w /etc/sudoers -p wa -k sudoers_changes
--w /etc/sudoers.d/ -p wa -k sudoers_changes
-# track SSH config
--w /etc/ssh/sshd_config -p wa -k ssh_config
--w /etc/ssh/sshd_config.d/ -p wa -k ssh_config
-# privileged binaries
--w /usr/bin -p wa -k privileged-bins
--w /usr/sbin -p wa -k privileged-bins
-# login/logout
--w /var/log/faillog -p wa -k auth_failures
--w /var/log/lastlog -p wa -k auth_changes
-# kernel module loads
--w /sbin/modprobe -p x -k kernel_modules
-# detect root shell spawn
--a always,exit -F arch=b64 -S execve -F uid=0 -k root_shell
-# make audit config immutable
--e 2
-EOF
-    sudo augenrules --load
-    sudo systemctl restart auditd
-    echo "✅ auditd hardening installed (reference)"
+# ─── 5. ADVANCED SETUP (opt-in) ───────────────────────────────────────────────
+if [ "$ADVANCED_SETUP" != true ]; then
+    echo
+    info "ADVANCED_SETUP=false — skipping 2FA, auditd, and dnf-automatic."
+    echo "  Set ADVANCED_SETUP=true at the top of this script to enable them."
+    echo
+    echo "💯 Basic VPS hardening complete. Goodbye!"
+    exit 0
 fi
 
-echo "=============================================================="
-echo "✨ AlmaLinux SSH hardening script completed (reference-ready)"
+section "ADVANCED SETUP (ADVANCED_SETUP=true)"
+
+# ── 5a. Lock root password ────────────────────────────────────────────────────
+echo "🔒 Locking root password"
+sudo passwd -l root
+ok "Root password locked."
+
+# ── 5b. Automatic Security Updates ───────────────────────────────────────────
+# AlmaLinux equivalent of unattended-upgrades: dnf-automatic
+echo "📦 Enabling automatic security updates (dnf-automatic)..."
+sudo dnf install -y dnf-automatic
+# Set to security-only updates
+sudo sed -i 's/^upgrade_type\s*=.*/upgrade_type = security/' /etc/dnf/automatic.conf
+sudo sed -i 's/^apply_updates\s*=.*/apply_updates = yes/'    /etc/dnf/automatic.conf
+sudo systemctl enable --now dnf-automatic.timer
+ok "dnf-automatic (security updates) enabled."
+
+# ── 5c. SSH 2FA (Google Authenticator TOTP) ───────────────────────────────────
+section "SSH 2FA — Google Authenticator TOTP"
+
+echo "📦 Installing TOTP PAM module..."
+# AlmaLinux: package is google-authenticator (not libpam-google-authenticator)
+sudo dnf install -y google-authenticator
+
+echo "🪪 Generating TOTP secret for user: $NEWUSER"
+sudo -u "$NEWUSER" bash -c "google-authenticator -t -d -f -r 3 -R 30 -W --quiet"
+
+echo "📁 Backing up SSH PAM config..."
+sudo cp /etc/pam.d/sshd /etc/pam.d/sshd.bak."$(date +%F-%H%M%S)"
+
+echo "✒️  Updating PAM rules for TOTP"
+sudo sed -i '1i auth required pam_google_authenticator.so' /etc/pam.d/sshd
+
+echo "📁 Backing up sshd_config..."
+sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak."$(date +%F-%H%M%S)"
+
+echo "⚙️  Configuring SSH to require publickey + TOTP"
+sudo sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication yes/' /etc/ssh/sshd_config
+sudo sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/'       /etc/ssh/sshd_config
+
+if grep -q "^AuthenticationMethods" /etc/ssh/sshd_config; then
+    sudo sed -i 's/^AuthenticationMethods.*/AuthenticationMethods publickey,keyboard-interactive/' /etc/ssh/sshd_config
+else
+    echo "AuthenticationMethods publickey,keyboard-interactive" | sudo tee -a /etc/ssh/sshd_config >/dev/null
+fi
+
+echo "🤔 Validating SSH configuration with 2FA..."
+if sudo sshd -t; then
+    restart_service "$SSH_SERVICE"
+    ok "SSH 2FA enabled successfully."
+else
+    warn "ERROR: Invalid SSH config — rolling back 2FA changes..."
+    sudo cp /etc/ssh/sshd_config.bak.* /etc/ssh/sshd_config
+    sudo cp /etc/pam.d/sshd.bak.*      /etc/pam.d/sshd
+    restart_service "$SSH_SERVICE"
+    exit 1
+fi
+
+echo
+echo "  👉 IMPORTANT: Open a NEW terminal and test login before closing this session."
+echo "  SSH now requires:"
+echo "    1) SSH private key"
+echo "    2) Google Authenticator 6-digit TOTP code"
+
+# ── 5d. auditd Hardening Rules ────────────────────────────────────────────────
+section "AUDITD HARDENING RULES"
+
+echo "📜 Installing hardened auditd rules..."
+# AlmaLinux: audit + audispd-plugins
+sudo dnf install -y audit audispd-plugins
+
+sudo tee /etc/audit/rules.d/hardening.rules >/dev/null <<'EOF'
+## ===============================
+## HARDENED AUDITD SECURITY RULES
+## ===============================
+
+# Track sudo log changes
+-w /var/log/sudo.log -p wa -k sudo_logs
+
+# Track privileged binary changes
+-w /usr/bin  -p wa -k privileged-bins
+-w /usr/sbin -p wa -k privileged-bins
+
+# Track essential system config changes
+-w /etc/passwd    -p wa -k passwd_changes
+-w /etc/group     -p wa -k group_changes
+-w /etc/shadow    -p wa -k shadow_changes
+-w /etc/sudoers   -p wa -k sudoers_changes
+-w /etc/sudoers.d/ -p wa -k sudoers_changes
+
+# Track SSH config changes
+-w /etc/ssh/sshd_config      -p wa -k ssh_config
+-w /etc/ssh/sshd_config.d/   -p wa -k ssh_config
+
+# Track login/auth events
+-w /var/log/faillog  -p wa -k auth_failures
+-w /var/log/lastlog  -p wa -k auth_changes
+-w /var/log/tallylog -p wa -k auth_failures
+
+# Track systemd service changes
+-w /etc/systemd/system/      -p wa -k systemd_changes
+-w /usr/lib/systemd/system/  -p wa -k systemd_changes
+
+# Track kernel module loading
+-w /sbin/modprobe     -p x -k kernel_modules
+-w /usr/sbin/modprobe -p x -k kernel_modules
+
+# Monitor root escalation
+-w /bin/su -p x -k root_escalation
+
+# File permission/ownership changes
+-a always,exit -F arch=b64 -S chmod,chown,chgrp,fchmod,fchown -k perms
+-a always,exit -F arch=b32 -S chmod,chown,chgrp,fchmod,fchown -k perms
+
+# Root shell spawning
+-a always,exit -F arch=b64 -S execve -F uid=0 -k root_shell
+-a always,exit -F arch=b32 -S execve -F uid=0 -k root_shell
+
+# Firewall rule changes
+-w /etc/firewalld/ -p wa -k firewalld_changes
+
+# Cron persistence tracking
+-w /etc/crontab       -p wa -k cron_changes
+-w /etc/cron.d/       -p wa -k cron_changes
+-w /etc/cron.daily/   -p wa -k cron_changes
+-w /etc/cron.hourly/  -p wa -k cron_changes
+
+# Make audit config immutable (requires reboot to change rules after this)
+-e 2
+EOF
+
+sudo augenrules --load
+sudo systemctl enable --now auditd
+restart_service auditd
+ok "auditd hardening rules installed."
+
+# ─── DONE ─────────────────────────────────────────────────────────────────────
+echo
+echo "💯 Full VPS hardening complete (basic + advanced). Goodbye!"
 echo "Login using: ssh $NEWUSER@server -p $CUSTOM_PORT"
 echo "Keep your existing SSH session open while testing."
 ```
@@ -677,7 +829,7 @@ curl -sSL https://gist.githubusercontent.com/username/abcdef1234567890/raw/harde
 | No. | Action | Command/File |
 | --- | --- | --- |
 | 18 | Check failed logins | `grep "Failed password" /var/log/auth.log` |
-| 19 | Find top attacker IPs | `awk '{print $11}' \| sort \| uniq -c \| sort -rn` |
+| 19 | Find top attacker IPs | `awk '\{print $11\}' | sort | uniq -c | sort -rn` |
 | 20 | Verify successful logins | grep "Accepted" /var/log/auth.log |
 | 21 | Watch live auth log | `tail -f /var/log/auth.log` |
 
