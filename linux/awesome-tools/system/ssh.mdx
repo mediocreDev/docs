@@ -132,6 +132,7 @@ set -e
 ### ===== BASIC OPTIONS (always run) =====
 CUSTOM_PORT=2222
 ALLOW_PASSWORD_LOGIN=true
+ALLOW_ROOT_LOGIN=true        # set to false to block root SSH login
 
 NEWUSER="americio"
 SSH_PUBLIC_KEY="ssh-ed25519 AAAA...your_key_here"
@@ -152,6 +153,24 @@ info()    { echo "  ℹ️  $*"; }
 ok()      { echo "  ✅ $*"; }
 warn()    { echo "  ⚠️  $*"; }
 
+# Restart a service, validate it came up, exit on failure
+restart_service() {
+    local svc="$1"
+    echo "🔄 Restarting $svc..."
+    if sudo systemctl restart "$svc"; then
+        sleep 1
+        if sudo systemctl is-active --quiet "$svc"; then
+            ok "$svc is running."
+        else
+            warn "$svc failed to start — check: journalctl -u $svc -n 30"
+            exit 1
+        fi
+    else
+        warn "systemctl restart $svc failed."
+        exit 1
+    fi
+}
+
 # ─── 1. SSH HARDENING (always) ────────────────────────────────────────────────
 section "SSH HARDENING"
 
@@ -167,7 +186,7 @@ sudo tee "$FILE" >/dev/null <<EOF
 Port ${CUSTOM_PORT}
 # Uncomment to disable IPv6: AddressFamily inet
 
-PermitRootLogin no
+PermitRootLogin $( [ "$ALLOW_ROOT_LOGIN" = true ] && echo "yes" || echo "no" )
 PasswordAuthentication $( [ "$ALLOW_PASSWORD_LOGIN" = true ] && echo "yes" || echo "no" )
 PermitEmptyPasswords no
 KbdInteractiveAuthentication no
@@ -190,7 +209,7 @@ echo "🤔 Validating SSH configuration..."
 # Ubuntu 24.04 uses ssh.service; older distros use sshd.service
 SSH_SERVICE=$(systemctl list-units --type=service --all | grep -oE 'ssh(d)?\.service' | head -1)
 if sudo sshd -t; then
-    sudo systemctl reload "$SSH_SERVICE"
+    restart_service "$SSH_SERVICE"
     ok "SSH hardened successfully (service: $SSH_SERVICE)."
 else
     warn "SSH config ERROR — restoring backup..."
@@ -269,7 +288,7 @@ logpath = journal
 EOF
 
 sudo systemctl enable --now fail2ban
-sudo systemctl restart fail2ban
+restart_service fail2ban
 sleep 2
 sudo fail2ban-client status sshd
 ok "Fail2ban installed & configured."
@@ -327,13 +346,13 @@ fi
 
 echo "🤔 Validating SSH configuration with 2FA..."
 if sudo sshd -t; then
-    sudo systemctl restart "$SSH_SERVICE"
+    restart_service "$SSH_SERVICE"
     ok "SSH 2FA enabled successfully."
 else
     warn "ERROR: Invalid SSH config — rolling back 2FA changes..."
     sudo cp /etc/ssh/sshd_config.bak.* /etc/ssh/sshd_config
     sudo cp /etc/pam.d/sshd.bak.*      /etc/pam.d/sshd
-    sudo systemctl restart "$SSH_SERVICE"
+    restart_service "$SSH_SERVICE"
     exit 1
 fi
 
@@ -412,7 +431,7 @@ EOF
 
 sudo augenrules --load
 sudo systemctl enable --now auditd
-sudo systemctl restart auditd
+restart_service auditd
 ok "auditd hardening rules installed."
 
 # ─── DONE ─────────────────────────────────────────────────────────────────────
