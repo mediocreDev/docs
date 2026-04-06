@@ -50,7 +50,7 @@ sudo fail2ban-client get sshd banip
 
 ```shell
 # refs: https://gist.github.com/OliverKain/e784e9754d47ccafc3be1d8061e6f1ba
-echo "=== SSH PORT ===" && ss -tlnp | grep sshd && \
+echo "=== SSH PORT ===" && sudo ss -tlnp | grep sshd && \
 echo "=== FAILED LOGINS (top IPs) ===" && grep "Failed password" /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -10 && \
 echo "=== ACTIVE SESSIONS ===" && w && \
 echo "=== FAIL2BAN ===" && sudo fail2ban-client status sshd 2>/dev/null || echo "fail2ban not running"
@@ -118,7 +118,7 @@ sudo systemctl restart ssh
 systemctl restart sshd
 ```
 
-- Allow port via \[\[ufw\]\]/\[firewalld\]
+- Allow port via [ufw][firewalld]
 - Apply fail2ban
 
 #### Quick setup script
@@ -826,12 +826,12 @@ curl -sSL https://gist.githubusercontent.com/username/abcdef1234567890/raw/harde
 
 ##### Layer 5 — Log Monitoring (Visibility)
 
-| No. | Action | Command/File |
-| --- | --- | --- |
-| 18 | Check failed logins | `grep "Failed password" /var/log/auth.log` |
-| 19 | Find top attacker IPs | `awk '\{print $11\}' | sort | uniq -c | sort -rn` |
-| 20 | Verify successful logins | grep "Accepted" /var/log/auth.log |
-| 21 | Watch live auth log | `tail -f /var/log/auth.log` |
+| No. | Action | Command/File |  |  |  |
+| --- | --- | --- | --- | --- | --- |
+| 18 | Check failed logins | `grep "Failed password" /var/log/auth.log` |  |  |  |
+| 19 | Find top attacker IPs | `sudo grep "Failed password" /var/log/auth.log \| awk '{print \$(NF-3)}' \| sort \| uniq -c \| sort -rn \| head -20` |
+| 20 | Verify successful logins | grep "Accepted" /var/log/auth.log |  |  |  |
+| 21 | Watch live auth log | `tail -f /var/log/auth.log` |  |  |  |
 
 ##### Layer 6 — Advanced Hardening
 
