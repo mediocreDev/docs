@@ -187,9 +187,11 @@ Include /etc/ssh/sshd_config.d/*.conf
 EOF
 
 echo "🤔 Validating SSH configuration..."
+# Ubuntu 24.04 uses ssh.service; older distros use sshd.service
+SSH_SERVICE=$(systemctl list-units --type=service --all | grep -oE 'ssh(d)?\.service' | head -1)
 if sudo sshd -t; then
-    sudo systemctl reload sshd
-    ok "SSH hardened successfully."
+    sudo systemctl reload "$SSH_SERVICE"
+    ok "SSH hardened successfully (service: $SSH_SERVICE)."
 else
     warn "SSH config ERROR — restoring backup..."
     sudo cp "$FILE.backup"* "$FILE"
@@ -226,8 +228,6 @@ if [ "$PASSWORDLESS_SUDO" = true ]; then
     sudo chmod 440 /etc/sudoers.d/90-"$NEWUSER"
 fi
 
-echo "🔒 Locking root password"
-sudo passwd -l root
 ok "User setup completed."
 
 # ─── 3. UFW FIREWALL (always) ─────────────────────────────────────────────────
@@ -286,7 +286,12 @@ fi
 
 section "ADVANCED SETUP (ADVANCED_SETUP=true)"
 
-# ── 5a. Unattended Security Updates ──────────────────────────────────────────
+# ── 5a. Lock root password ────────────────────────────────────────────────────
+echo "🔒 Locking root password"
+sudo passwd -l root
+ok "Root password locked."
+
+# ── 5b. Unattended Security Updates ──────────────────────────────────────────
 echo "📦 Unattended Security Updates..."
 sudo apt install -y unattended-upgrades
 sudo dpkg-reconfigure -plow unattended-upgrades
@@ -322,13 +327,13 @@ fi
 
 echo "🤔 Validating SSH configuration with 2FA..."
 if sudo sshd -t; then
-    sudo systemctl restart sshd
+    sudo systemctl restart "$SSH_SERVICE"
     ok "SSH 2FA enabled successfully."
 else
     warn "ERROR: Invalid SSH config — rolling back 2FA changes..."
     sudo cp /etc/ssh/sshd_config.bak.* /etc/ssh/sshd_config
     sudo cp /etc/pam.d/sshd.bak.*      /etc/pam.d/sshd
-    sudo systemctl restart sshd
+    sudo systemctl restart "$SSH_SERVICE"
     exit 1
 fi
 
