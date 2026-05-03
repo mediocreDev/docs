@@ -98,7 +98,6 @@
                       "linux/awesome-tools/system/tmux",
                       "linux/awesome-tools/system/firewalld",
                       "linux/awesome-tools/system/ufw",
-                      "linux/awesome-tools/system/web-terminal",
                       "linux/awesome-tools/system/zsh"
                     ]
                   },
@@ -112,6 +111,13 @@
                       "linux/awesome-tools/applications/others"
                     ]
                   }
+                ]
+              },
+              {
+                "group": "How-tos",
+                "icon": "page",
+                "pages": [
+                  "linux/awesome-tools/system/web-terminal"
                 ]
               }
             ]
