@@ -26,6 +26,8 @@
     "products": [
       {
         "product": "SWE",
+        "icon": "head-side-brain",
+        "description": "My SWE Legacy",
         "tabs": [
           {
             "tab": "Langs",
@@ -123,6 +125,19 @@
                 ]
               }
             ]
+          }
+        ]
+      },
+      {
+        "product": "Reality",
+        "tabs": [
+          {
+            "tab": "Mind Blown",
+            "icon": "alien",
+            "pages": [
+              "mind-blown/table-of-contents",
+              "mind-blown/kich-ban-reset-viet-nam-theo-vung-2025-2030"
+            ]
           },
           {
             "tab": "Trading Dojo (WIP)",
@@ -142,14 +157,6 @@
                   }
                 ]
               }
-            ]
-          },
-          {
-            "tab": "Mind Blown",
-            "icon": "alien",
-            "pages": [
-              "mind-blown/table-of-contents",
-              "mind-blown/kich-ban-reset-viet-nam-theo-vung-2025-2030"
             ]
           }
         ]
