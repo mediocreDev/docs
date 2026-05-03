@@ -1,0 +1,201 @@
+---
+title: 'Cloudflare Tunnel + Google Auth'
+description: Expose a web app running on a remote VPS securely via Cloudflare Tunnel, with Google login restricted to specific email addresses. No open ports required.
+---
+
+## Prerequisites
+
+- Ubuntu/Debian VPS with a web app running (e.g. on `localhost:8080`)
+- A domain already on Cloudflare (nameservers pointing to Cloudflare)
+- A Cloudflare account with Zero Trust enabled (free tier is sufficient)
+- A Google Cloud account (for OAuth credentials)
+
+---
+
+## Phase 1 — Install cloudflared on the VPS
+
+### 1.1 Download and install
+
+```bash
+curl -L --output cloudflared.deb \
+  https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+
+sudo dpkg -i cloudflared.deb
+
+# Fix any dependency issues if they arise
+sudo apt-get install -f
+
+# Verify
+cloudflared --version
+```
+
+### 1.2 Authenticate with Cloudflare
+
+```bash
+cloudflared tunnel login
+```
+
+This prints a URL. Open it in your **local browser**, log in to Cloudflare, and select your domain. A credentials file is saved automatically on the VPS at `~/.cloudflared/cert.pem`.
+
+### 1.3 Create the tunnel
+
+```bash
+cloudflared tunnel create my-tunnel
+```
+
+Output example:
+```
+Created tunnel my-tunnel with id 3f2a1b8c-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+> **Save the UUID** — you will need it in the next phase.
+
+---
+
+## Phase 2 — Configure and run the tunnel
+
+### 2.1 Write config.yml
+
+Create the file at `~/.cloudflared/config.yml`:
+
+```yaml
+tunnel: <YOUR_TUNNEL_UUID>
+credentials-file: /root/.cloudflared/<YOUR_TUNNEL_UUID>.json
+
+ingress:
+  - hostname: app.yourdomain.com
+    service: http://localhost:8080
+  - service: http_status:404
+```
+
+Replace `<YOUR_TUNNEL_UUID>` with the UUID from Phase 1, and `app.yourdomain.com` with your actual subdomain.
+
+### 2.2 Create the DNS record
+
+```bash
+cloudflared tunnel route dns my-tunnel app.yourdomain.com
+```
+
+This automatically adds a CNAME in your Cloudflare DNS pointing to the tunnel — no manual DNS editing needed.
+
+### 2.3 Run as a systemd service
+
+```bash
+sudo cloudflared service install
+sudo systemctl start cloudflared
+sudo systemctl enable cloudflared
+
+# Confirm it's running
+sudo systemctl status cloudflared
+```
+
+The tunnel now starts automatically on every reboot.
+
+---
+
+## Phase 3 — Create an Access Application
+
+In the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com):
+
+1. Go to **Access → Applications → Add an application**
+2. Select **Self-hosted**
+3. Set **Application domain** to `app.yourdomain.com`
+4. Under **Policies**, click **Add a policy**:
+   - Policy name: e.g. `Allowed users`
+   - Action: `Allow`
+   - Rule selector: `Emails`
+   - Value: add each allowed address, e.g. `alice@gmail.com`, `bob@gmail.com`
+5. Save the application
+
+> Anyone not in the email list will be blocked at the Cloudflare edge — your VPS never receives their request.
+
+---
+
+## Phase 4 — Add Google as Identity Provider
+
+### 4.1 Create OAuth credentials in Google Cloud
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → **APIs & Services → Credentials**
+2. Click **Create Credentials → OAuth 2.0 Client ID**
+3. Application type: **Web application**
+4. Under **Authorized redirect URIs**, add:
+   ```
+   https://<your-team-name>.cloudflareaccess.com/cdn-cgi/access/callback
+   ```
+   Replace `<your-team-name>` with your Cloudflare Zero Trust team name (found in Zero Trust → Settings → General).
+5. Save — copy the **Client ID** and **Client Secret**
+
+### 4.2 Add Google IdP in Cloudflare Zero Trust
+
+1. Go to **Settings → Authentication → Login methods**
+2. Click **Add → Google**
+3. Paste your **Client ID** and **Client Secret**
+4. Click **Save**
+5. Optionally click **Test** to confirm the connection works
+
+---
+
+## How it works end-to-end
+
+```
+User visits app.yourdomain.com
+        ↓
+Cloudflare Access intercepts the request
+        ↓
+User is redirected to Google login
+        ↓
+Google authenticates → returns email to Cloudflare
+        ↓
+Cloudflare checks email against your policy
+        ↓
+Allowed → request forwarded through tunnel to VPS :8080
+Blocked → 403, access denied
+```
+
+Your VPS port `8080` is never exposed to the public internet. All traffic flows through the encrypted tunnel.
+
+---
+
+## Customizing the Access login page
+
+Cloudflare allows limited branding on the login page:
+
+- **Logo** — upload a custom image
+- **App name** — shown as the page title
+- **Background color** — a single hex value
+
+Configure these in Zero Trust → **Settings → Custom Pages**, or per-app under the app's settings.
+
+Full CSS/layout customization is not supported on the default Access page. If you need a fully white-labeled login UI, you would need to implement a custom OIDC integration.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `cloudflared` not found after install | PATH not updated | Run `source ~/.bashrc` or open a new shell |
+| Tunnel auth URL doesn't work | VPS has no browser | Copy the URL and open it on your local machine |
+| 502 Bad Gateway | App not running on the configured port | Check your service is up: `curl localhost:8080` |
+| Google login succeeds but access denied | Email not in policy | Add the email in Zero Trust → Access → your app → policy |
+| Tunnel not running after reboot | Service not enabled | Run `sudo systemctl enable cloudflared` |
+
+---
+
+## Useful commands
+
+```bash
+# Check tunnel status
+cloudflared tunnel info my-tunnel
+
+# List all tunnels
+cloudflared tunnel list
+
+# View live tunnel logs
+sudo journalctl -u cloudflared -f
+
+# Restart the tunnel service
+sudo systemctl restart cloudflared
+```
+
+

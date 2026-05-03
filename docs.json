@@ -117,7 +117,8 @@
                 "group": "How-tos",
                 "icon": "page",
                 "pages": [
-                  "linux/awesome-tools/system/web-terminal"
+                  "linux/how-tos/web-terminal",
+                  "linux/how-tos/cloudflare-tunnel-google-auth"
                 ]
               }
             ]
