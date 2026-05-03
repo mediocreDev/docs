@@ -75,6 +75,7 @@
             "groups": [
               {
                 "group": "Swiss Army knives",
+                "icon": "fork-knife",
                 "pages": [
                   "linux/swiss-army-knives/file",
                   "linux/swiss-army-knives/user",
@@ -84,6 +85,7 @@
               },
               {
                 "group": "Awesome tools",
+                "icon": "pickaxe",
                 "pages": [
                   "linux/awesome-tools/personal-tool-checklist",
                   {
@@ -130,6 +132,12 @@
       },
       {
         "product": "Reality",
+        "icon": "bone-break",
+        "color": {
+          "light": "#751993",
+          "dark": "#751993"
+        },
+        "description": "The harsh truth...",
         "tabs": [
           {
             "tab": "Mind Blown",
