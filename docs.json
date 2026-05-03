@@ -23,130 +23,135 @@
         }
       ]
     },
-    "tabs": [
+    "products": [
       {
-        "tab": "Langs",
-        "groups": [
+        "product": "SWE",
+        "tabs": [
           {
-            "group": "Programming Languages",
-            "icon": "code",
-            "pages": [
-              "index",
+            "tab": "Langs",
+            "groups": [
               {
-                "group": "Git",
-                "icon": "git",
+                "group": "Programming Languages",
+                "icon": "code",
                 "pages": [
-                  "langs/git/essential-git",
-                  "langs/git/emoji-pull-request"
-                ]
-              },
-              {
-                "group": "Go",
-                "icon": "golang",
-                "pages": [
-                  "langs/go/essential-go"
-                ]
-              },
-              {
-                "group": "Node.js",
-                "icon": "node",
-                "pages": [
-                  "langs/node-js/essential-node"
-                ]
-              },
-              {
-                "group": "Python",
-                "icon": "python",
-                "pages": [
-                  "langs/python/essential-python"
+                  "index",
+                  {
+                    "group": "Git",
+                    "icon": "git",
+                    "pages": [
+                      "langs/git/essential-git",
+                      "langs/git/emoji-pull-request"
+                    ]
+                  },
+                  {
+                    "group": "Go",
+                    "icon": "golang",
+                    "pages": [
+                      "langs/go/essential-go"
+                    ]
+                  },
+                  {
+                    "group": "Node.js",
+                    "icon": "node",
+                    "pages": [
+                      "langs/node-js/essential-node"
+                    ]
+                  },
+                  {
+                    "group": "Python",
+                    "icon": "python",
+                    "pages": [
+                      "langs/python/essential-python"
+                    ]
+                  }
                 ]
               }
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Linux",
-        "groups": [
-          {
-            "group": "Swiss Army knives",
-            "pages": [
-              "linux/swiss-army-knives/file",
-              "linux/swiss-army-knives/user",
-              "linux/swiss-army-knives/monitoring",
-              "linux/swiss-army-knives/snippets"
             ]
           },
           {
-            "group": "Awesome tools",
-            "pages": [
-              "linux/awesome-tools/personal-tool-checklist",
+            "tab": "Linux",
+            "groups": [
               {
-                "group": "System",
-                "icon": "terminal",
+                "group": "Swiss Army knives",
                 "pages": [
-                  "linux/awesome-tools/system/nginx",
-                  "linux/awesome-tools/system/ssh",
-                  "linux/awesome-tools/system/systemctl",
-                  "linux/awesome-tools/system/tmux",
-                  "linux/awesome-tools/system/firewalld",
-                  "linux/awesome-tools/system/ufw",
-                  "linux/awesome-tools/system/web-terminal",
-                  "linux/awesome-tools/system/zsh"
+                  "linux/swiss-army-knives/file",
+                  "linux/swiss-army-knives/user",
+                  "linux/swiss-army-knives/monitoring",
+                  "linux/swiss-army-knives/snippets"
                 ]
               },
               {
-                "group": "Application",
-                "icon": "app-store",
+                "group": "Awesome tools",
                 "pages": [
-                  "linux/awesome-tools/applications/docker",
-                  "linux/awesome-tools/applications/gpg",
-                  "linux/awesome-tools/applications/vim",
-                  "linux/awesome-tools/applications/others"
+                  "linux/awesome-tools/personal-tool-checklist",
+                  {
+                    "group": "System",
+                    "icon": "terminal",
+                    "pages": [
+                      "linux/awesome-tools/system/nginx",
+                      "linux/awesome-tools/system/ssh",
+                      "linux/awesome-tools/system/systemctl",
+                      "linux/awesome-tools/system/tmux",
+                      "linux/awesome-tools/system/firewalld",
+                      "linux/awesome-tools/system/ufw",
+                      "linux/awesome-tools/system/web-terminal",
+                      "linux/awesome-tools/system/zsh"
+                    ]
+                  },
+                  {
+                    "group": "Application",
+                    "icon": "app-store",
+                    "pages": [
+                      "linux/awesome-tools/applications/docker",
+                      "linux/awesome-tools/applications/gpg",
+                      "linux/awesome-tools/applications/vim",
+                      "linux/awesome-tools/applications/others"
+                    ]
+                  }
                 ]
               }
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Captialist Slavery",
-        "groups": [
+          },
           {
-            "group": "Ây Ai(zaaa...)",
-            "icon": "rocketchat",
-            "pages": [
-              "capitalist-slavery/prompting-framework"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Trading Dojo (WIP)",
-        "groups": [
-          {
-            "group": "Legacies",
-            "icon": "landmark-dome",
-            "pages": [
+            "tab": "Captialist Slavery",
+            "groups": [
               {
-                "group": "HELEN's",
+                "group": "Ây Ai(zaaa...)",
+                "icon": "rocketchat",
                 "pages": [
-                  "trading-dojo/legacies/helen/plan-2026",
-                  "trading-dojo/legacies/helen/watchlist",
-                  "trading-dojo/legacies/helen/bookmarks",
-                  "trading-dojo/legacies/helen/helen-candle-patterns"
+                  "capitalist-slavery/prompting-framework"
                 ]
               }
             ]
+          },
+          {
+            "tab": "Trading Dojo (WIP)",
+            "groups": [
+              {
+                "group": "Legacies",
+                "icon": "landmark-dome",
+                "pages": [
+                  {
+                    "group": "HELEN's",
+                    "pages": [
+                      "trading-dojo/legacies/helen/plan-2026",
+                      "trading-dojo/legacies/helen/watchlist",
+                      "trading-dojo/legacies/helen/bookmarks",
+                      "trading-dojo/legacies/helen/helen-candle-patterns"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Mind Blown",
+            "icon": "alien",
+            "pages": [
+              "mind-blown/table-of-contents",
+              "mind-blown/kich-ban-reset-viet-nam-theo-vung-2025-2030"
+            ]
           }
-        ]
-      },
-      {
-        "tab": "Mind Blown",
-        "icon": "alien",
-        "pages": [
-          "mind-blown/table-of-contents",
-          "mind-blown/kich-ban-reset-viet-nam-theo-vung-2025-2030"
         ]
       }
     ]
