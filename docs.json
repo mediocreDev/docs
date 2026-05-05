@@ -42,7 +42,8 @@
                     "icon": "git",
                     "pages": [
                       "langs/git/essential-git",
-                      "langs/git/emoji-pull-request"
+                      "langs/git/conventional-commit",
+                      "langs/git/git-collaboration-policy"
                     ]
                   },
                   {

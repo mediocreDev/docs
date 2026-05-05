@@ -1,0 +1,364 @@
+---
+title: "Conventional Commit"
+description: "A practical guide for open source projects focused on traceability and debugging history."
+---
+
+## 1. Commit Structure
+
+```text
+<emoji> <type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+> **Emoji format:** Emoji and type are separated by a **space** — `✨ feat(auth): ...` not `✨ feat(auth): ...`. The space is required for the commitlint parser to correctly extract the type.
+
+### Quick Decision Tree
+
+```text
+What changed?          → Description (max 72 chars, imperative tense)
+Which module?          → Scope
+Is "why" non-obvious?  → Add body
+Closes an issue?       → Footer: Fixes #N
+Breaking API change?   → Footer: BREAKING CHANGE: ...
+Pair programmed?       → Footer: Co-authored-by: ...
+```
+
+---
+
+## 2. Types
+
+| Type | When to Use |
+| --- | --- |
+| `✨ feat` | Clear, user-facing changes — new features |
+| `🩹 fix` | Bug fixes — maps directly to `git bisect` |
+| `♻️ refactor` | Internal code improvements, no behavior change |
+| `👷 build` | Build system & pipelines |
+| `⚡️ perf` | Explicit performance optimizations |
+| `✅ test` | Add or fix test cases |
+| `📝 docs` | Documentation updates |
+| `🔨 chore` | Catch-all for maintenance, dependencies, configs, formatting |
+| `⏪ revert` | Revert a previous commit |
+
+> **Note on emoji prefixes:** Emojis make types visually scannable in `git log` and GitHub UI. The space between emoji and type is required — commitlint's parser uses it to split the emoji from the type text for validation.
+
+---
+
+## 3. Scope
+
+Scope = **the module, layer, or domain** that changed.
+
+> **Rule:** If you removed the scope and someone read the commit, would they know _where_ to look in the codebase? If no → add scope.
+
+```text
+🩹 fix: null pointer on login          ← unclear
+🩹 fix(auth): null pointer on login    ← immediately clear
+```
+
+> **Rule:** Type answers _what kind of change_, scope answers _where_. They should never overlap. This is why `perf` is excluded from Frontend scopes — the `⚡️perf` type already carries that intent. Use a specific scope instead: `⚡️ perf(router)`, `⚡️ perf(bundle)`, `⚡️ perf(render)`
+
+### Backend / API Scopes
+
+| Scope | Covers |
+| --- | --- |
+| `auth` | Authentication, JWT, OAuth, sessions |
+| `user` | User model, profile, registration |
+| `db` | Migrations, queries, connection pool |
+| `api` | Route handlers, controllers |
+| `middleware` | Rate limiting, logging, CORS |
+| `config` | Env vars, app configuration |
+| `cache` | Redis, in-memory caching |
+| `queue` | Job queues, workers |
+| `deps` | Dependency updates |
+
+### Frontend / Web App Scopes
+
+| Scope | Covers |
+| --- | --- |
+| `ui` | Components, layout, styling |
+| `auth` | Login, session, protected routes |
+| `router` | Navigation, route guards |
+| `store` | State management (Redux, Zustand) |
+| `api` | API calls, fetch layer |
+| `form` | Form validation, inputs |
+| `i18n` | Translations, locale |
+| `a11y` | Accessibility |
+
+### CLI Tool / Library Scopes
+
+| Scope | Covers |
+| --- | --- |
+| `core` | Main engine, entry point |
+| `cli` | Argument parsing, commands |
+| `config` | Config file loading, defaults |
+| `plugin` | Plugin system, hooks |
+| `output` | Formatting, logging, colors |
+| `types` | TypeScript types, interfaces |
+| `docs` | README, API docs |
+
+---
+
+## 4. Description vs Body
+
+|  | Description | Body |
+| --- | --- | --- |
+| **Answers** | _What_ changed | _Why_ it changed |
+| **Length** | Max 72 chars, imperative tense | As long as needed |
+| **Audience** | `git log --oneline` scanners | Debuggers, bisect investigators |
+| **Required** | ✅ Always | ⚠️ Only when "why" isn't obvious |
+
+### Imperative Tense Rule
+
+Write the description as a command: _"If applied, this commit will... \[description\]"_
+
+```text
+✅ 🩹 fix(auth): prevent token refresh race condition
+✅ ✨ feat(user): add email verification on registration
+❌ 🩹 fix(auth): fixed token refresh
+❌ ✨ feat(user): adding email verification
+```
+
+### When to Add a Body
+
+```text
+# Body NOT needed — reason is obvious
+🔨 chore(deps): bump lodash from 4.17.20 to 4.17.21
+
+# Body NEEDED — reason is not obvious from the diff
+🩹 fix(db): add connection timeout to pool config
+
+Without a timeout, idle connections were held open indefinitely.
+Under high load this exhausted the pool and caused new requests
+to hang. Setting timeout to 30s matches the upstream DB setting.
+```
+
+---
+
+## 5. Footer
+
+### ① Issue / Ticket References
+
+```text
+Fixes #482     ← automatically closes the GitHub issue on merge
+Closes #301    ← same as Fixes
+Refs #210      ← links without closing
+```
+
+> See **Git Collaboration Policy** for when to use `Fixes` vs `Refs`.
+
+### ② Breaking Changes
+
+```text
+BREAKING CHANGE: /api/v1/users now returns `userId` instead of `id`
+
+Consumers must update their response parsing. See migration guide
+in docs/migrations/v2.md
+```
+
+> `BREAKING CHANGE:` is a special keyword — tools like semantic-release use it to bump the **major version** automatically.
+
+### ③ Co-authors
+
+```text
+Co-authored-by: Jane Doe <jane@example.com>
+```
+
+---
+
+## 6. Full Examples by Project Type
+
+### Backend / API
+
+```text
+🩹 fix(auth): prevent token refresh race condition
+
+When two concurrent requests arrived with an expired token,
+both triggered a refresh simultaneously. The second refresh
+invalidated the first token, causing one request to fail with
+401 even though it had just refreshed.
+
+Added a Redis-based mutex lock to serialize refresh calls
+per user. Lock TTL is set to 5s to prevent deadlocks on crash.
+
+Fixes #482
+Co-authored-by: Jane Doe <jane@example.com>
+```
+
+```text
+🩹 fix(db): add connection timeout to pool config
+
+Without a timeout, idle connections were held open indefinitely.
+Under high load this exhausted the pool and caused new requests
+to hang. Setting timeout to 30s matches the upstream DB setting.
+
+Fixes #310
+```
+
+### Frontend / Web App
+
+```text
+🩹 fix(ui): prevent modal from closing on outside scroll
+```
+
+```text
+⚡️ perf(router): lazy load dashboard route to reduce initial bundle
+```
+
+```text
+✨ feat(api): replace axios with native fetch
+
+Removes axios dependency entirely. All interceptors have been
+rewritten as middleware functions in src/api/middleware.ts.
+
+BREAKING CHANGE: custom axios instances in plugins must be
+migrated to the new middleware API. See docs/migration-v3.md.
+Refs #201
+```
+
+### CLI Tool / Library
+
+```text
+🩹 fix(config): fall back to default when config file is malformed
+
+Previously the tool crashed with an unhandled JSON parse error.
+Now it logs a warning and continues with default configuration.
+
+Fixes #88
+```
+
+```text
+✨ feat(plugin): expose beforeTransform hook for plugin authors
+
+Allows plugins to intercept and modify data before the core
+transformation runs. Hook receives the raw input and must
+return the transformed value or the original unchanged.
+
+Refs #120
+```
+
+```text
+✨ feat(types): export PluginConfig interface as public API
+
+BREAKING CHANGE: PluginConfig was previously internal. Consumers
+who duck-typed this interface must now import it explicitly.
+```
+
+---
+
+## 7. Tooling — commitlint \+ Husky
+
+### Install
+
+```bash
+npm install --save-dev @commitlint/cli @commitlint/config-conventional \
+  conventional-changelog-conventionalcommits husky
+```
+
+### commitlint.config.ts
+
+This config auto-generates the emoji regex from your type definitions — no manual maintenance needed. Based on the official commitlint emoji example and the approach used by LobeHub.
+
+```ts
+import type { ParserPreset, UserConfig } from '@commitlint/types';
+import config from '@commitlint/config-conventional';
+import createPreset from 'conventional-changelog-conventionalcommits';
+import { merge } from 'lodash-es';
+
+// Build emoji regex dynamically from your type enum
+async function createEmojiParser(): Promise<ParserPreset> {
+  const emojiRegexPart = Object.values(config.prompt.questions.type.enum)
+    .map((value) => (value as any).emoji.trim())
+    .join('|');
+
+  const parserOpts = {
+    headerPattern: new RegExp(
+      `^(?:${emojiRegexPart})\\s+(\\w*)(?:\\((.*)\\))?!?:\\s+(.*)$`
+    ),
+    breakingHeaderPattern: new RegExp(
+      `^(?:${emojiRegexPart})\\s+(\\w*)(?:\\((.*)\\))?!:\\s+(.*)$`
+    ),
+    headerCorrespondence: ['type', 'scope', 'subject'],
+  };
+
+  const emojiParser = merge({}, await createPreset(), {
+    conventionalChangelog: { parserOpts },
+    parserOpts,
+    recommendedBumpOpts: { parserOpts },
+  });
+
+  return emojiParser;
+}
+
+const emojiParser = await createEmojiParser();
+
+const config: UserConfig = {
+  extends: ['@commitlint/config-conventional'],
+  parserPreset: emojiParser,
+  rules: {
+    'type-enum': [
+      2,
+      'always',
+      ['feat', 'fix', 'refactor', 'build', 'perf', 'test', 'docs', 'chore', 'revert'],
+    ],
+  },
+  prompt: {
+    questions: {
+      type: {
+        enum: {
+          feat:     { emoji: '✨', description: 'User-facing new feature' },
+          fix:      { emoji: '🩹', description: 'Bug fix' },
+          refactor: { emoji: '♻️', description: 'Internal improvement, no behavior change' },
+          build:    { emoji: '👷', description: 'Build system & pipelines' },
+          perf:     { emoji: '⚡️', description: 'Performance optimization' },
+          test:     { emoji: '✅', description: 'Add or fix test cases' },
+          docs:     { emoji: '📝', description: 'Documentation update' },
+          chore:    { emoji: '🔨', description: 'Maintenance, deps, config, formatting' },
+          revert:   { emoji: '⏪', description: 'Revert a previous commit' },
+        },
+        headerWithEmoji: true, // includes emoji in the final commit header
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+### Husky (local enforcement)
+
+```bash
+npx husky init
+echo "npx --no -- commitlint --edit \$1" > .husky/commit-msg
+```
+
+### GitHub Actions (CI enforcement for all contributors)
+
+```yaml
+# .github/workflows/commitlint.yml
+name: Lint Commits
+on: [pull_request]
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v5
+```
+
+> CI enforcement ensures **every contributor's commits** are validated, not just yours.
+
+---
+
+## Summary
+
+| Concern | Decision |
+| --- | --- |
+| Commit format | Conventional Commits (type/scope/body) |
+| Type \+ scope overlap | Never — type = what kind, scope = where |
+| Body rule | Always explain **why**, never just what |
+| Local enforcement | commitlint \+ Husky |
+| CI enforcement | commitlint GitHub Action on PRs |

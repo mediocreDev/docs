@@ -1,0 +1,288 @@
+---
+title: "Git Collaboration Policy"
+description: "Workflow and decision-making rules for open source projects."
+---
+
+## 1. Atomic Commits
+
+One commit = one logical reason to change.
+
+```text
+❌ fix login bug and update README and bump lodash version
+
+✅ 🩹fix(auth): resolve null pointer on failed login
+✅ 📝docs(readme): update installation steps
+✅ 🔨chore(deps): bump lodash to 4.17.21
+```
+
+### Cross-cutting Changes
+
+A single logical reason may touch multiple files or scopes. This is still one atomic commit — scope the commit to the **primary domain**.
+
+```text
+🩹fix(auth): prevent null pointer on login failure
+
+- middleware/auth.js   → add null guard on token parse
+- config/auth.js       → set default token expiry fallback
+- services/auth.js     → handle missing user gracefully
+```
+
+### Rule
+
+| Case | Action |
+| --- | --- |
+| Same logical reason, many files | One commit, primary scope |
+| Independent value on its own | Separate commit |
+
+### Useful Tools
+
+- `git add -p` — stage only part of your changes (patch mode)
+- `git rebase -i` — clean up local commits before pushing
+- Never commit WIP to `main` or release branches
+
+---
+
+## 2. Issue Anatomy
+
+### One Issue = One Cohesive Domain
+
+If an issue contains unrelated problems → **split into separate issues**.
+
+```text
+❌ 🐛bug #42 — Auth broken + dashboard slow + docs outdated
+   (unrelated concerns → should be 3 separate issues)
+
+✅ 🐛bug #42  — Auth is broken
+✅ 🍄improvement #43 — Dashboard performance
+✅ 🗃documentation #44 — Outdated docs
+```
+
+### Break Into Subtasks
+
+Related problems within one domain → stay as **GitHub checkbox subtasks** inside the issue.
+
+```text
+🐛bug #42 — Auth is broken  [size: M]
+  ☐ Prevent null pointer on login failure
+  ☐ Fix token refresh race condition
+```
+
+Each subtask maps to one or more atomic commits referencing the parent issue.
+
+---
+
+## 3. Commit → Issue Reference Strategy
+
+### `Fixes` vs `Refs`
+
+| Footer | When to Use |
+| --- | --- |
+| `Fixes #N` | Last (or only) commit that resolves the issue — closes it automatically on merge |
+| `Refs #N` | Intermediate commits that are part of the issue but don't close it yet |
+
+### Single-commit subtask
+
+The subtask fits in one commit → use `Fixes #N`:
+
+```text
+🩹fix(auth): prevent null pointer on login failure
+
+Fixes #42
+```
+
+### Multi-commit subtask → promote to its own issue
+
+When a subtask grows to need multiple commits → **promote it to its own issue**.
+
+```text
+🐛bug #42 — Auth is broken
+  ☑ Prevent null pointer on login failure    → Fixes #42 (single commit)
+  ☐ Fix token refresh race condition         → too big → promoted to #45
+```
+
+Intermediate commits on the promoted issue use `Refs`, final commit uses `Fixes`:
+
+```text
+🩹fix(auth): extract token validation logic     Refs #45
+🩹fix(auth): add mutex lock to refresh call     Refs #45
+✅test(auth): cover race condition scenario      Fixes #45
+```
+
+Check off the promoted subtask in the original issue with a reference:
+
+```text
+☑ Fix token refresh race condition → promoted to #45
+```
+
+---
+
+## 4. History Integrity
+
+### Don't Rewrite Pushed History
+
+Rewriting pushed commits in open source breaks contributors' local copies.
+
+**Don't:**
+
+- `git push --force` on shared branches
+- Amend commits already pushed to `main`
+- Rebase branches others are working on
+
+**Do:**
+
+- Clean up with `git rebase -i` **before** pushing
+- Use `git revert` to undo a pushed commit safely
+
+### When a Task Evolves After Commits Exist
+
+If a subtask was promoted to a new issue after some commits already referenced the old issue:
+
+1. Leave existing commits as-is — don't rewrite history
+2. Promote the subtask to a new issue (`#45`)
+3. Future commits reference `#45`
+4. Add a note in `#45` description linking the earlier commits:
+
+```text
+Related commits before this issue was created:
+- abc1234 🩹fix(auth): initial token refresh investigation (Refs #42)
+```
+
+> **Rule: Don't rewrite history. Promote forward, document backward.**
+
+---
+
+## 5. Merge Strategy — Rebase for Traceability
+
+| Strategy | Traceability | Use When |
+| --- | --- | --- |
+| **Rebase** ✅ | Full atomic history on `main` | Open source, traceability-first |
+| **Squash** | One commit per PR | Small PRs with messy WIP commits |
+| **Merge commit** | Branch topology preserved | When you need visual branch history |
+
+> For open source \+ traceability: **always rebase**.
+
+---
+
+## 6. Git Log Strategy
+
+### Merge Commits — Ignore in Daily Work
+
+```text
+* a1b2c3d  Merge pull request #42 from user/feature   ← skip (navigation marker)
+* f3e4d5c  🩹fix(auth): prevent token refresh race     ← real history
+* b1c2d3e  ✨feat(auth): add OAuth2 login flow          ← real history
+```
+
+Merge commits are navigation markers only — they tell you _that_ a PR merged, not _why_ anything changed.
+
+### Useful Aliases
+
+```bash
+# Clean log — no merge commits
+git log --oneline --no-merges
+
+# Set as permanent alias
+git config --global alias.hist "log --oneline --no-merges --graph"
+
+# Use:
+git hist
+```
+
+### When Merge Commits ARE Useful
+
+| Scenario | Why |
+| --- | --- |
+| `git revert` a whole feature | Revert the merge commit = undo entire PR at once |
+| Tracing when a branch landed | `git log --merges` shows PR merge timeline |
+
+---
+
+## 7. PR Description
+
+PR descriptions are **ephemeral** — they live in GitHub's database, not in Git. They don't appear in `git log`, survive repo migrations, or exist for contributors without GitHub access.
+
+### Commit vs PR — Roles
+
+| Layer | Purpose | Audience |
+| --- | --- | --- |
+| **Each commit** | Permanent record, `git bisect`, blame | Future contributors, yourself in 6 months |
+| **PR description** | Review context, screenshots, discussion | Reviewers right now |
+
+> Write commit messages as if the PR never existed — because for `git log`, it effectively doesn't.
+
+### What Belongs in a PR Description
+
+- Summary of what the PR does (for reviewers)
+- Screenshots / recordings for UI changes
+- Testing instructions for reviewers
+- Links to related issues or discussions
+- Anything too contextual for a commit body that only reviewers need
+
+---
+
+## 8. GitHub Issue Labels
+
+Issue labels describe work **before and during** development. Commit types describe the **result**.
+
+### Type Labels
+
+| Label | Covers |
+| --- | --- |
+| `🐛bug` | Broken functionality |
+| `✨request` | New functionality |
+| `🍄improvement` | Kaizen / polish / performance / DX |
+| `🔍testing` | Add or fix tests |
+| `🏗refactor` | Internal restructuring |
+| `🎨design` | UI/UX work |
+| `🔒security` | Vulnerabilities / hardening |
+| `🔬research` | Spikes, POCs |
+| `🗃documentation` | Documentation |
+| `💬discussion` | Proposals / decisions |
+
+### Size Labels
+
+| Label | Meaning |
+| --- | --- |
+| `🔹size: S` | Small — quick change, low risk |
+| `🔶size: M` | Medium — moderate scope |
+| `🔴size: L` | Large — significant changes, needs careful review |
+| `👺size: XL` | Extra large — consider breaking it down |
+
+### Status Labels
+
+| Label | Meaning |
+| --- | --- |
+| `🤔Need Reproduce` | Bug needs a reproduction case before work begins |
+| `🕗Todo` | Accepted, not yet started |
+| `🧑‍💻Doing` | Currently in progress |
+| `🚽WON'T DO` | Rejected or out of scope |
+| `📦Released` | Shipped to production |
+
+### Mapping: Issue Labels → Commit Types
+
+| Issue Label | Likely Commit Type |
+| --- | --- |
+| `🐛bug` | `🩹fix` |
+| `✨request` | `✨feat` |
+| `🍄improvement` | `⚡️perf` or `♻️refactor` |
+| `🔍testing` | `✅test` |
+| `🏗refactor` | `♻️refactor` |
+| `🎨design` | `✨feat` or `♻️refactor` |
+| `🔒security` | `🩹fix` or `♻️refactor` |
+| `🗃documentation` | `📝docs` |
+
+---
+
+## Summary
+
+| Concern | Decision |
+| --- | --- |
+| Commit size | Atomic — one logical reason, may touch many files |
+| Cross-cutting changes | One commit, primary scope |
+| Issue scope | One cohesive domain — split if unrelated |
+| Subtask size | Single commit → stay; multiple commits → promote to own issue |
+| Commit reference | `Refs #N` for intermediate, `Fixes #N` for final |
+| History rewriting | Never on pushed branches — promote forward, document backward |
+| PR merge strategy | **Rebase** (preserves full atomic history) |
+| Merge commits | Navigation markers only — use `--no-merges` in daily `git log` |
+| PR descriptions | Ephemeral — write commits as if PR never existed |
