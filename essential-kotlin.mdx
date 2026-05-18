@@ -1,0 +1,465 @@
+---
+title: "Essential Kotlin"
+---
+
+# Kotlin Learning Plan for Java Developers
+
+## Goal
+
+Become confident writing idiomatic Kotlin code, understand Java interoperability, and build Kotlin-first applications efficiently.
+
+---
+
+# Week 1: Kotlin Foundations
+
+Recommended pace: 1–1.5 hours/day
+
+---
+
+## Day 1–2: Setup \+ Syntax Crash Course
+
+### Tasks
+
+- Install IntelliJ IDEA Community Edition
+
+- Explore Kotlin Playground
+
+- Learn:
+
+  - `fun main()`
+
+  - `val` vs `var`
+
+  - Type inference
+
+  - Functions
+
+  - String templates
+
+### Resources
+
+- [https://play.kotlinlang.org/koans](https://play.kotlinlang.org/koans)
+
+- [https://kotlinlang.org/docs/basic-syntax.html](https://kotlinlang.org/docs/basic-syntax.html)
+
+### Practice
+
+Create:
+
+- Calculator
+
+- Temperature converter
+
+- String formatter
+
+---
+
+## Day 3: Type System \+ Null Safety
+
+### Topics
+
+- Nullable vs non-nullable types
+
+- Safe calls `?.`
+
+- Elvis operator `?:`
+
+- Non-null assertion `!!`
+
+- Smart casts
+
+### Resources
+
+- [https://kotlinlang.org/docs/null-safety.html](https://kotlinlang.org/docs/null-safety.html)
+
+### Practice
+
+Convert Java methods using null checks into Kotlin.
+
+---
+
+## Day 4: Classes & Objects
+
+### Topics
+
+- Primary constructors
+
+- Secondary constructors
+
+- `init` blocks
+
+- `data class`
+
+- `object`
+
+- `companion object`
+
+### Resources
+
+- [https://kotlinlang.org/docs/classes.html](https://kotlinlang.org/docs/classes.html)
+
+### Practice
+
+Build:
+
+- `User`
+
+- `Product`
+
+- `Order`
+
+data classes.
+
+---
+
+## Day 5–6: Collections \+ Lambdas
+
+### Topics
+
+- `listOf`
+
+- `mutableListOf`
+
+- Maps/Sets
+
+- Lambdas
+
+- Functional operations:
+
+  - `map`
+
+  - `filter`
+
+  - `reduce`
+
+  - `fold`
+
+### Resources
+
+- [https://kotlinlang.org/docs/collections-overview.html](https://kotlinlang.org/docs/collections-overview.html)
+
+### Practice
+
+Convert Java loops into Kotlin functional style.
+
+---
+
+## Day 7: Project Warm-up
+
+### Tasks
+
+- Convert Java classes to Kotlin using IntelliJ
+
+- Build a small utility app
+
+### Suggested Mini Projects
+
+- Notes manager
+
+- Task tracker
+
+- Expense calculator
+
+---
+
+# Week 2: Intermediate Kotlin
+
+---
+
+## Day 8–9: Kotlin Idioms
+
+### Topics
+
+- `when`
+
+- Smart casts
+
+- Extension functions
+
+- Scope functions:
+
+  - `let`
+
+  - `run`
+
+  - `apply`
+
+  - `also`
+
+  - `with`
+
+### Resources
+
+- [https://kotlinlang.org/docs/idioms.html](https://kotlinlang.org/docs/idioms.html)
+
+### Practice
+
+Refactor verbose Java-style Kotlin into idiomatic Kotlin.
+
+---
+
+## Day 10–11: Java Interoperability
+
+### Topics
+
+- Calling Java from Kotlin
+
+- Calling Kotlin from Java
+
+- JVM annotations:
+
+  - `@JvmStatic`
+
+  - `@JvmOverloads`
+
+  - `@JvmField`
+
+  - `@file:JvmName`
+
+### Resources
+
+- [https://kotlinlang.org/docs/java-interop.html](https://kotlinlang.org/docs/java-interop.html)
+
+### Practice
+
+Integrate a Java library into a Kotlin project.
+
+---
+
+## Day 12: Functional Kotlin Deep Dive
+
+### Topics
+
+- Higher-order functions
+
+- Inline functions
+
+- Sequences
+
+- Collection pipelines
+
+### Practice
+
+Build reusable utility functions.
+
+---
+
+## Day 13–14: Mini Kotlin Application
+
+### Goal
+
+Build a complete Kotlin console application.
+
+### Suggested Projects
+
+- TODO application
+
+- Weather API client
+
+- JSON parser
+
+- File organizer
+
+### Focus Areas
+
+- Kotlin idioms
+
+- Collections
+
+- Object design
+
+- Error handling
+
+---
+
+# Week 3: Advanced Kotlin (Optional)
+
+---
+
+## Coroutines
+
+### Topics
+
+- `suspend`
+
+- `launch`
+
+- `async`
+
+- `withContext`
+
+- Structured concurrency
+
+### Resources
+
+- [https://kotlinlang.org/docs/coroutines-overview.html](https://kotlinlang.org/docs/coroutines-overview.html)
+
+### Practice
+
+Create asynchronous API calls.
+
+---
+
+## Testing
+
+### Topics
+
+- JUnit 5
+
+- Kotest
+
+- MockK
+
+### Practice
+
+Write unit tests for previous projects.
+
+---
+
+## DSLs \+ Advanced Features
+
+### Topics
+
+- Type-safe builders
+
+- DSL creation
+
+- Reflection
+
+- Delegates
+
+---
+
+# Recommended Tools
+
+| Tool | Purpose |
+
+|------|---------|
+
+| IntelliJ IDEA | Kotlin IDE |
+
+| Gradle Kotlin DSL | Build system |
+
+| Kotlin Playground | Practice |
+
+| GitHub | Version control |
+
+| Kotest | Testing |
+
+| MockK | Mocking |
+
+---
+
+# Recommended Books
+
+## Beginner to Intermediate
+
+- Kotlin in Action
+
+- Head First Kotlin
+
+## Intermediate to Advanced
+
+- Programming Kotlin
+
+- Effective Kotlin
+
+---
+
+# Recommended YouTube Channels
+
+- Philipp Lackner
+
+- Kotlin by JetBrains
+
+- Coding in Flow
+
+---
+
+# Final Goal Project Ideas
+
+## Backend
+
+- REST API with Ktor or Spring Boot
+
+## Android
+
+- Notes app with Jetpack Compose
+
+## CLI
+
+- File organizer
+
+- Task manager
+
+## General
+
+- JSON parser
+
+- Expense tracker
+
+---
+
+# Milestone Checklist
+
+## Beginner
+
+- \[ \] Understand Kotlin syntax
+
+- \[ \] Use null safety confidently
+
+- \[ \] Write data classes
+
+- \[ \] Use collections and lambdas
+
+## Intermediate
+
+- \[ \] Write idiomatic Kotlin
+
+- \[ \] Use extension functions
+
+- \[ \] Understand Java interop
+
+- \[ \] Build a complete app
+
+## Advanced
+
+- \[ \] Use coroutines
+
+- \[ \] Write tests
+
+- \[ \] Understand DSLs
+
+- \[ \] Build production-ready apps
+
+---
+
+# Suggested Daily Routine
+
+1. Read documentation (15 min)
+
+2. Watch tutorial/video (20 min)
+
+3. Code exercises (30–45 min)
+
+4. Refactor old Java code into Kotlin (15 min)
+
+---
+
+# Important Mindset Shift for Java Developers
+
+Do not write Java in Kotlin.
+
+Focus on:
+
+- Immutability
+
+- Expression-based coding
+
+- Functional collection operations
+
+- Concise APIs
+
+- Kotlin idioms
+
+Idiomatic Kotlin is simpler, safer, and more expressive than direct Java translations.

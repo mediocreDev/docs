@@ -66,6 +66,13 @@
                     "pages": [
                       "langs/python/essential-python"
                     ]
+                  },
+                  {
+                    "group": "Java",
+                    "icon": "mug-hot",
+                    "pages": [
+                      "essential-kotlin"
+                    ]
                   }
                 ]
               }
