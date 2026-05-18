@@ -71,7 +71,7 @@
                     "group": "Java",
                     "icon": "mug-hot",
                     "pages": [
-                      "essential-kotlin"
+                      "langs/java/essential-kotlin"
                     ]
                   }
                 ]
