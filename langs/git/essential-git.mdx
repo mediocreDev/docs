@@ -180,3 +180,33 @@ Preventing unintentional staging or committing of files:
 - Use `.gitignore`: Save patterns as strings or wildcards to ignore specific files or directories.
 
 This cheat sheet serves as an essential guide for both beginners and experienced users to navigate common Git commands effectively.
+
+### Signing Git commits
+
+```shellscript GPG init & assign
+# Generate key
+gpg --full-generate-key
+
+# List keys, focus this line
+#sec   .../[KEY_ID] yyyy-MM-dd [expires: yyyy-MM-dd]
+gpg --list-secret-keys --keyid-format=long
+
+# Public key, copy all output -> Github/Need verified platform
+gpg --armor --export KEY_ID
+
+# (Optional) Set gpg for Git
+where gpg
+# C:\_work\tools\GnuPG\bin\gpg.exe
+git config --global gpg.program "/c/_work/tools/GnuPG/bin/gpg.exe"
+
+# Clear Git config (global)
+git config --global --unset gpg.format
+
+# Set Git config (global)
+git config --global user.signingkey KEY_ID
+
+# Turn on signing required on commit (or tag)
+git config --global commit.gpgsign true
+# (or tag)
+#git config --global tag.gpgSign true
+```
