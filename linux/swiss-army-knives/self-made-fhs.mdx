@@ -1,0 +1,58 @@
+---
+title: "Self-made FHS"
+icon: "folder-tree"
+description: "Only the paths you'll actually touch while developing, installing tools, and running services. Kernel/boot/device internals omitted."
+---
+
+## Where things live
+
+| Path | What goes here | Example |
+| :-- | :-- | :-- |
+| `~/.config/` | Per-app user config (XDG standard) | `~/.config/git/config`, `~/.config/nvim/` |
+| `~/.local/bin/` | Your personal scripts/binaries, no sudo needed | `pip install --user`, custom CLI tools |
+| `~/.local/share/` | Per-user app data | `~/.local/share/nvim/`, language toolchain data |
+| `~/.cache/` | Per-user cache, safe to wipe | build caches, `~/.cache/pip` |
+| `/etc/` | System-wide config (needs sudo) | `/etc/nginx/nginx.conf`, `/etc/hosts`, `/etc/environment` |
+| `/usr/bin`, `/usr/local/bin` | Installed CLI tools | where `apt`/`brew`/`make install` put binaries |
+| `/usr/local/` | Anything you build from source system-wide | `/usr/local/bin`, `/usr/local/lib` |
+| `/opt/` | Big vendor tools installed as a bundle | `/opt/homebrew`, IDEs, SDKs |
+| `/var/log/` | Logs for services you run | `/var/log/nginx/`, `/var/log/myapp/` |
+| `/var/lib/` | Persistent state for services | Postgres/MySQL data dirs, Docker's data root (`/var/lib/docker`) |
+| `/var/cache/` | Regenerable cache, safe to delete | package manager cache (`/var/cache/apt`) |
+| `/var/tmp/` | Temp files that **survive** reboot | long-running job output you don't want wiped by a restart |
+| `/var/spool/` | Queued jobs awaiting processing | cron jobs, print/mail queues |
+| `/run/` | Runtime-only data since last boot, wiped on reboot | PID files, unix sockets — e.g. Docker's socket at `/run/docker.sock`, a dev server's `.pid` file |
+| `/tmp/` | Scratch space, gone on reboot | build temp files, quick test output |
+| `/srv/` | Content your machine serves | local web root, self-hosted git repos |
+| `/media/` | Auto-mounted removable media | USB drive or SD card plugged in gets mounted here automatically |
+| `/mnt/` | Manual/temporary mounts you set up yourself | mounting a network share or extra disk by hand: `sudo mount /dev/sdb1 /mnt/backup` |
+
+## Project-local (inside your repo, not system-wide)
+
+| Path/pattern | Purpose |
+| :-- | :-- |
+| `.env` | Local environment variables (never commit) |
+| `node_modules/`, `venv/`, `.venv/`, `target/` | Language-specific dependency/build dirs — gitignored |
+| `.git/` | Repo metadata |
+| `dist/`, `build/` | Compiled output |
+
+## Quick decisions
+
+- **Installing a CLI tool just for you?** → `~/.local/bin` (no sudo, no root pollution)
+- **Config for a tool you use daily?** → `~/.config/<tool>/` — this is the XDG Base Directory convention, the modern per-user layer on top of FHS
+- **Installing/packaging something as a proper deb/rpm?** → binaries in `/usr/bin`, config in `/etc/myapp/`, persistent state in `/var/lib/myapp/`, logs in `/var/log/myapp/`
+- **Running a local service (DB, web server) and need its data to persist?** → `/var/lib/<service>/`
+- **That service's logs?** → `/var/log/<service>/`
+- **A big third-party dev tool (Android Studio, a proprietary SDK)?** → `/opt/`
+- **Built something from source you want available system-wide?** → `/usr/local/bin`
+- **Just need scratch space for a build or test run?** → `/tmp` (safe to lose anytime, gone on reboot)
+- **App-managed cache that's safe to lose but you'd rather not rebuild constantly?** → `/var/cache/<app>/`
+- **Something that must survive a reboot but isn't "real" persistent state?** → `/var/tmp/`
+- **A dev server's PID or socket file while it's running?** → `/run/` (gone after reboot, which is what you want)
+- **Plugged in a USB drive or SD card?** → shows up under `/media/` automatically
+- **Mounting a network share or external disk yourself?** → `/mnt/`
+- **Docker/container volumes?** → mounted separately, doesn't follow this hierarchy at all inside the container's writable layer
+
+## One habit worth keeping
+
+Never hand-edit anything under `/usr/bin` or `/usr/lib` — those are package-manager territory and get silently overwritten/removed on the next `apt upgrade`. If you need something persistent and yours, it goes in `/usr/local` or `/opt`, never `/usr` directly.
