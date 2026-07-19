@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "Americio's Scraps",
   "colors": {
     "primary": "#16A34A",
@@ -221,5 +221,11 @@
       "x": "https://x.com/americio0705",
       "github": "https://github.com/OliverKain"
     }
+  },
+  "background": {
+    "decoration": "gradient"
+  },
+  "fonts": {
+    "family": "Nunito"
   }
 }
